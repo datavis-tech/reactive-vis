@@ -16,7 +16,8 @@ Here is a list of property names that have a specific interpretation within this
 | innerWidth    | The inner width of the visualization.  | Integer (in pixels) | 940 |
 | innerHeight   | The inner height of the visualization. | Integer (in pixels) | 460 |
 | data          | An array of parsed rows from a table.  | Array of Objects    | `[{x:1}, {x:2}]` |
-| dataURL       | A URL from which to load data.         | String (URL)        | http://curran.github.io<br>/data/iris/iris.csv |
+| dataURL       | A URL from which to load data.         | String (URL)        | "iris.csv" |
+| dataFormat    | How the data URL content should be parsed| String | "csv", "tsv", or "json" 
 
 An empty cell for default value means that there is no default value, and the value is derived from default values of other properties.
 
