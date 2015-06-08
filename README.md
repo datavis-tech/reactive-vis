@@ -25,16 +25,7 @@ Here is a list of property names that have a specific interpretation within this
 | xDomainMin | A fixed min value for the X domain. | Number | 0 |
 | xDomainMax | A fixed max value for the X domain. | Number | 10 |
 | xDomain | The domain array for the X axis. | Array | [0, 10] |
-| xRangeMin | The min value for the X range | Number | 0 |
-| xRangeMax | The max value for the X range | Number | 940 |
-
-
-
-
-
-
-
-
-An empty cell for default value means that there is no default value, and the value is derived from default values of other properties.
-
-A special default value `NONE` refers to a value that is defined, but represents that the property is optional and has not been speficied (similar conceptually to [Scala's Option Type](http://danielwestheide.com/blog/2012/12/19/the-neophytes-guide-to-scala-part-5-the-option-type.html).
+| xRangeMin | The min value for the X range. | Number | 0 |
+| xRangeMax | The max value for the X range. | Number | 940 |
+| xRange | The range array for the X scale. | Array | [0, 940] |
+| xScale | The X scale. | A [D3 Scale](https://github.com/mbostock/d3/wiki/Scales) | |
