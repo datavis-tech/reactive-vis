@@ -17,7 +17,10 @@ Here is a list of property names that have a specific interpretation within this
 | innerHeight   | The inner height of the visualization. | Integer (in pixels) | 460 |
 | data          | An array of parsed rows from a table.  | Array of Objects    | `[{x:1}, {x:2}]` |
 | dataURL       | A URL from which to load data.         | String (URL)        | "iris.csv" |
-| dataFormat    | How the data URL content should be parsed| String | "csv", "tsv", or "json" 
+| dataFormat    | How the data URL content should be parsed| String | "csv", "tsv", or "json" |
+| dataNumericColumns| An array of numeric column names. | Array of Strings | ["petalWidth", "petalHeight"] |
+| dataDateColumns| An array of date column names. | Array of Strings | ["timestamp"] |
+
 
 An empty cell for default value means that there is no default value, and the value is derived from default values of other properties.
 
