@@ -1,0 +1,33 @@
+{
+  "name": "reactive-vis",
+  "version": "0.0.1",
+  "description": "Reusable reactive data flows for data visualization.",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "rollup --format=cjs --output reactive-vis.js index.js",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/curran/reactive-vis.git"
+  },
+  "keywords": [
+    "visualization",
+    "frp"
+  ],
+  "author": "Curran Kelleher",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/curran/reactive-vis/issues"
+  },
+  "homepage": "https://github.com/curran/reactive-vis",
+  "dependencies": {
+    "d3-selection": "^0.4.7",
+    "reactive-model": "0.0.4"
+  },
+  "devDependencies": {
+    "jsdom": "3",
+    "mocha": "^2.2.5",
+    "rollup": "^0.8.1"
+  }
+}
