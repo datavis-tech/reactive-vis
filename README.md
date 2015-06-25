@@ -1,5 +1,5 @@
 # reactive-vis
-An experiment for building data visualizations.
+An experiment for building data visualizations. Work-in-progress, just getting started and trying to settle on tooling.
 
 In this project, it is assumed that a data visualization is represented as an instance of [ReactiveModel](https://github.com/curran/reactive-model). Given this assumption, this library provides reusable data dependency graphs for visualizations based on [D3](d3js.org).
 
