@@ -33,3 +33,21 @@ Here is a list of property names that have a specific interpretation within this
 | xTickDensity | The number of desired tick marks per 100 pixels. | 2 |
 | xAxis  | The X axis. | A [D3 Axis](https://github.com/mbostock/d3/wiki/SVG-Axes) | |
 
+## Visualizations
+
+The goal of this project is to provide reusable components that implement the following visualizations
+
+ * Bar Chart
+   * Orientation: horizontal or vertical
+   * Optional "stack" and "group" columns
+     * The "stack" column automatically becomes the "color" column
+ * Line Chart
+   * Optional "lines" column for producing multiple lines
+     * The "lines" column automatically becomes the "color" column
+ * Area Chart
+   * Optional "stack" column for producing multiple stacked areas
+     * The "stack" column automatically becomes the "color" column
+     * Configurable between stacked, filled Y axis, and streamgraph layouts
+ * Scatter Plot
+   * Optional "size" and "color" columns
+   * Configurable defaults for size and color
