@@ -7,8 +7,9 @@ Here is a list of property names that have a specific interpretation within this
 
 | Property| Description | Type | Example |
 |---------|-------------|------|---------|
-| width         | The outer width of the visualization.  | Integer (in pixels) | 960 |
-| height        | The outer height of the visualization. | Integer (in pixels) | 500 |
+| container         | The container element the visualization.| DOM Element | `<div></div>`|
+| containerWidth    | The outer width of the visualization.  | Integer (in pixels) | 960 |
+| containerHeight   | The outer height of the visualization. | Integer (in pixels) | 500 |
 | marginTop     | The top margin.                        | Integer (in pixels) | 20  |
 | marginBottom  | The bottom margin.                     | Integer (in pixels) | 20  |
 | marginRight   | The right margin.                      | Integer (in pixels) | 10  |
@@ -29,3 +30,6 @@ Here is a list of property names that have a specific interpretation within this
 | xRangeMax | The max value for the X range. | Number | 940 |
 | xRange | The range array for the X scale. | Array | [0, 940] |
 | xScale | The X scale. | A [D3 Scale](https://github.com/mbostock/d3/wiki/Scales) | |
+| xTickDensity | The number of desired tick marks per 100 pixels. | 2 |
+| xAxis  | The X axis. | A [D3 Axis](https://github.com/mbostock/d3/wiki/SVG-Axes) | |
+
