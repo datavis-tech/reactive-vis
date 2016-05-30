@@ -57,17 +57,17 @@ Encapsulates the [D3 Margin Convention](https://bl.ocks.org/mbostock/3019563). D
 
 Properties added:
 
- * *model*.**marginRight**
- * *model*.**marginLeft**
- * *model*.**marginBottom**
- * *model*.**marginTop**
- * *model*.**innerWidth**
- * *model*.**innerHeight**
- * *model*.**g**
+ * *model*.**marginRight** The right side margin (in pixels).
+ * *model*.**marginLeft** The left side margin (in pixels).
+ * *model*.**marginTop** The top side margin (in pixels).
+ * *model*.**marginBottom** The bottom side margin (in pixels).
+ * *model*.**innerWidth** The width of the inner rectangle, after margins have been applied. This is computed and updated based on *model*.**marginRight**, *model*.**marginLeft**, and *model*.**width**.
+ * *model*.**innerHeight** The height of the inner rectangle, after margins have been applied. This is computed and updated based on *model*.**marginTop**, *model*.**marginBottom**, and *model*.**height**.
+ * *model*.**g** An SVG `<g>` element, appended as a child to *model*.**svg**.
 
 Reactive functions:
 
- * **g-transform**
+ * **g-transform** Computes and updates the `transform` attribute of *model*.**g** based on *model*.**marginTop** and *model*.**marginLeft**.
 
 ## Related Work
 
