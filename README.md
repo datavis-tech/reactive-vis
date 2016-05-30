@@ -36,14 +36,14 @@ Note that names for nodes in the data flow graph diagrams follow the convention 
 
 Properties added:
 
- * model.*svg* A D3 Selection of an SVG element. This should be set exactly once. This selection will be the root of the visualization DOM tree, and will be accessed by other mixins.
- * model.*width* An integer representing the width (in pixels) of the SVG element. The default value is 960 (the default width of examples on [bl.ocks.org](http://bl.ocks.org/)).
- * model.*height* An integer representing the width (in pixels) of the SVG element. The default value is 500 (the default height of examples on [bl.ocks.org](http://bl.ocks.org/).
+ * *model*.**svg** A D3 Selection of an SVG element. This should be set exactly once. This selection will be the root of the visualization DOM tree, and will be accessed by other mixins.
+ * *model*.**width** An integer representing the width (in pixels) of the SVG element. The default value is 960 (the default width of examples on [bl.ocks.org](http://bl.ocks.org/)).
+ * *model*.**height** An integer representing the width (in pixels) of the SVG element. The default value is 500 (the default height of examples on [bl.ocks.org](http://bl.ocks.org/).
 
 Reactive functions:
 
- * *svg-width* Sets the `width` attribute of the SVG element based on the value of model.*width*.
- * *svg-height* Sets the `height` attribute of the SVG element based on the value of model.*height*.
+ * **svg-width** Sets the `width` attribute of the SVG element based on the value of model.*width*.
+ * **svg-height** Sets the `height` attribute of the SVG element based on the value of model.*height*.
 
 ### Margin
 
@@ -57,17 +57,17 @@ Encapsulates the [D3 Margin Convention](https://bl.ocks.org/mbostock/3019563). D
 
 Properties added:
 
- * model.*marginRight*
- * model.*marginLeft*
- * model.*marginBottom*
- * model.*marginTop*
- * model.*innerWidth*
- * model.*innerHeight*
- * model.*g*
+ * *model*.**marginRight**
+ * *model*.**marginLeft**
+ * *model*.**marginBottom**
+ * *model*.**marginTop**
+ * *model*.**innerWidth**
+ * *model*.**innerHeight**
+ * *model*.**g**
 
 Reactive functions:
 
- * *g-transform*
+ * **g-transform**
 
 ## Related Work
 
