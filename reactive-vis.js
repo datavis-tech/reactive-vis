@@ -1,1000 +1,816 @@
-'use strict';
-
-// When depth = 1, root = [Node, …].
-// When depth = 2, root = [[Node, …], …].
-// When depth = 3, root = [[[Node, …], …], …]. etc.
-// Note that [Node, …] and NodeList are used interchangeably; see arrayify.
-function Selection(root, depth) {
-  this._root = root;
-  this._depth = depth;
-  this._enter = this._update = this._exit = null;
-}
-
-function defaultView(node) {
-  return node
-      && ((node.ownerDocument && node.ownerDocument.defaultView) // node is a Node
-          || (node.document && node) // node is a Window
-          || node.defaultView); // node is a Document
-}
-
-function dispatchEvent(node, type, params) {
-  var window = defaultView(node),
-      event = window.CustomEvent;
-
-  if (event) {
-    event = new event(type, params);
-  } else {
-    event = window.document.createEvent("Event");
-    if (params) event.initEvent(type, params.bubbles, params.cancelable), event.detail = params.detail;
-    else event.initEvent(type, false, false);
-  }
-
-  node.dispatchEvent(event);
-}
-
-function selection_dispatch(type, params) {
-
-  function dispatchConstant() {
-    return dispatchEvent(this, type, params);
-  }
-
-  function dispatchFunction() {
-    return dispatchEvent(this, type, params.apply(this, arguments));
-  }
-
-  return this.each(typeof params === "function" ? dispatchFunction : dispatchConstant);
-}
-
-function noop() {}
-
-var requoteRe = /[\\\^\$\*\+\?\|\[\]\(\)\.\{\}]/g;
-
-function requote(string) {
-  return string.replace(requoteRe, "\\$&");
-}
-
-function filterListenerOf(listener) {
-  return function(event) {
-    var related = event.relatedTarget;
-    if (!related || (related !== this && !(related.compareDocumentPosition(this) & 8))) {
-      listener(event);
-    }
-  };
-}
-
-var event = null;
-
-function listenerOf(listener, ancestors, args) {
-  return function(event1) {
-    var i = ancestors.length, event0 = event; // Events can be reentrant (e.g., focus).
-    while (--i >= 0) args[i << 1] = ancestors[i].__data__;
-    event = event1;
-    try {
-      listener.apply(ancestors[0], args);
-    } finally {
-      event = event0;
-    }
-  };
-}
-
-var filterEvents = new Map;
-
-if (typeof document !== "undefined") {
-  var _element = document.documentElement;
-  if (!("onmouseenter" in _element)) {
-    filterEvents.set("mouseenter", "mouseover").set("mouseleave", "mouseout");
-  }
-}
-
-function selection_event(type, listener, capture) {
-  var n = arguments.length,
-      key = "__on" + type,
-      filter,
-      root = this._root;
-
-  if (n < 2) return (n = this.node()[key]) && n._listener;
-
-  if (n < 3) capture = false;
-  if ((n = type.indexOf(".")) > 0) type = type.slice(0, n);
-  if (filter = filterEvents.has(type)) type = filterEvents.get(type);
-
-  function add() {
-    var ancestor = root, i = arguments.length >> 1, ancestors = new Array(i);
-    while (--i >= 0) ancestor = ancestor[arguments[(i << 1) + 1]], ancestors[i] = i ? ancestor._parent : ancestor;
-    var l = listenerOf(listener, ancestors, arguments);
-    if (filter) l = filterListenerOf(l);
-    remove.call(this);
-    this.addEventListener(type, this[key] = l, l._capture = capture);
-    l._listener = listener;
-  }
-
-  function remove() {
-    var l = this[key];
-    if (l) {
-      this.removeEventListener(type, l, l._capture);
-      delete this[key];
-    }
-  }
-
-  function removeAll() {
-    var re = new RegExp("^__on([^.]+)" + requote(type) + "$"), match;
-    for (var name in this) {
-      if (match = name.match(re)) {
-        var l = this[name];
-        this.removeEventListener(match[1], l, l._capture);
-        delete this[name];
-      }
-    }
-  }
-
-  return this.each(listener
-      ? (n ? add : noop) // Attempt to add untyped listener is ignored.
-      : (n ? remove : removeAll));
-}
-
-function selection_datum(value) {
-  return arguments.length ? this.property("__data__", value) : this.node().__data__;
-}
-
-function selection_remove() {
-  return this.each(function() {
-    var parent = this.parentNode;
-    if (parent) parent.removeChild(this);
-  });
-}
-
-function selectorOf(selector) {
-  return function() {
-    return this.querySelector(selector);
-  };
-}
-
-var namespaces = (new Map)
-    .set("svg", "http://www.w3.org/2000/svg")
-    .set("xhtml", "http://www.w3.org/1999/xhtml")
-    .set("xlink", "http://www.w3.org/1999/xlink")
-    .set("xml", "http://www.w3.org/XML/1998/namespace")
-    .set("xmlns", "http://www.w3.org/2000/xmlns/");
-
-function namespace(name) {
-  var i = name.indexOf(":"), prefix = name;
-  if (i >= 0) prefix = name.slice(0, i), name = name.slice(i + 1);
-  return namespaces.has(prefix) ? {space: namespaces.get(prefix), local: name} : name;
-}
-
-function creatorOf(name) {
-  name = namespace(name);
-
-  function creator() {
-    var document = this.ownerDocument,
-        uri = this.namespaceURI;
-    return uri
-        ? document.createElementNS(uri, name)
-        : document.createElement(name);
-  }
-
-  function creatorNS() {
-    return this.ownerDocument.createElementNS(name.space, name.local);
-  }
-
-  return name.local ? creatorNS : creator;
-}
-
-function selection_append(creator, selector) {
-  if (typeof creator !== "function") creator = creatorOf(creator);
-
-  function append() {
-    return this.appendChild(creator.apply(this, arguments));
-  }
-
-  function insert() {
-    return this.insertBefore(creator.apply(this, arguments), selector.apply(this, arguments) || null);
-  }
-
-  return this.select(arguments.length < 2
-      ? append
-      : (typeof selector !== "function" && (selector = selectorOf(selector)), insert));
-}
-
-function selection_html(value) {
-  if (!arguments.length) return this.node().innerHTML;
-
-  function setConstant() {
-    this.innerHTML = value;
-  }
-
-  function setFunction() {
-    var v = value.apply(this, arguments);
-    this.innerHTML = v == null ? "" : v;
-  }
-
-  if (value == null) value = "";
-
-  return this.each(typeof value === "function" ? setFunction : setConstant);
-}
-
-function selection_text(value) {
-  if (!arguments.length) return this.node().textContent;
-
-  function setConstant() {
-    this.textContent = value;
-  }
-
-  function setFunction() {
-    var v = value.apply(this, arguments);
-    this.textContent = v == null ? "" : v;
-  }
-
-  if (value == null) value = "";
-
-  return this.each(typeof value === "function" ? setFunction : setConstant);
-}
-
-function collapse(string) {
-  return string.trim().replace(/\s+/g, " ");
-}
-
-function classerOf(name) {
-  var re;
-  return function(node, value) {
-    if (c = node.classList) return value ? c.add(name) : c.remove(name);
-    if (!re) re = new RegExp("(?:^|\\s+)" + requote(name) + "(?:\\s+|$)", "g");
-    var c = node.getAttribute("class") || "";
-    if (value) {
-      re.lastIndex = 0;
-      if (!re.test(c)) node.setAttribute("class", collapse(c + " " + name));
-    } else {
-      node.setAttribute("class", collapse(c.replace(re, " ")));
-    }
-  };
-}
-
-function selection_class(name, value) {
-  name = (name + "").trim().split(/^|\s+/);
-  var n = name.length;
-
-  if (arguments.length < 2) {
-    var node = this.node(), i = -1;
-    if (value = node.classList) { // SVG elements may not support DOMTokenList!
-      while (++i < n) if (!value.contains(name[i])) return false;
-    } else {
-      value = node.getAttribute("class");
-      while (++i < n) if (!classedRe(name[i]).test(value)) return false;
-    }
-    return true;
-  }
-
-  name = name.map(classerOf);
-
-  function setConstant() {
-    var i = -1;
-    while (++i < n) name[i](this, value);
-  }
-
-  function setFunction() {
-    var i = -1, x = value.apply(this, arguments);
-    while (++i < n) name[i](this, x);
-  }
-
-  return this.each(typeof value === "function" ? setFunction : setConstant);
-}
-
-function selection_property(name, value) {
-  if (arguments.length < 2) return this.node()[name];
-
-  function remove() {
-    delete this[name];
-  }
-
-  function setConstant() {
-    this[name] = value;
-  }
-
-  function setFunction() {
-    var x = value.apply(this, arguments);
-    if (x == null) delete this[name];
-    else this[name] = x;
-  }
-
-  return this.each(value == null ? remove : typeof value === "function" ? setFunction : setConstant);
-}
-
-function selection_style(name, value, priority) {
-  var n = arguments.length;
-
-  if (n < 2) return defaultView(n = this.node()).getComputedStyle(n, null).getPropertyValue(name);
-
-  if (n < 3) priority = "";
-
-  function remove() {
-    this.style.removeProperty(name);
-  }
-
-  function setConstant() {
-    this.style.setProperty(name, value, priority);
-  }
-
-  function setFunction() {
-    var x = value.apply(this, arguments);
-    if (x == null) this.style.removeProperty(name);
-    else this.style.setProperty(name, x, priority);
-  }
-
-  return this.each(value == null ? remove : typeof value === "function" ? setFunction : setConstant);
-}
-
-function selection_attr(name, value) {
-  name = namespace(name);
-
-  if (arguments.length < 2) {
-    var node = this.node();
-    return name.local
-        ? node.getAttributeNS(name.space, name.local)
-        : node.getAttribute(name);
-  }
-
-  function remove() {
-    this.removeAttribute(name);
-  }
-
-  function removeNS() {
-    this.removeAttributeNS(name.space, name.local);
-  }
-
-  function setConstant() {
-    this.setAttribute(name, value);
-  }
-
-  function setConstantNS() {
-    this.setAttributeNS(name.space, name.local, value);
-  }
-
-  function setFunction() {
-    var x = value.apply(this, arguments);
-    if (x == null) this.removeAttribute(name);
-    else this.setAttribute(name, x);
-  }
-
-  function setFunctionNS() {
-    var x = value.apply(this, arguments);
-    if (x == null) this.removeAttributeNS(name.space, name.local);
-    else this.setAttributeNS(name.space, name.local, x);
-  }
-
-  return this.each(value == null
-      ? (name.local ? removeNS : remove)
-      : (typeof value === "function"
-          ? (name.local ? setFunctionNS : setFunction)
-          : (name.local ? setConstantNS : setConstant)));
-}
-
-function selection_each(callback) {
-  var depth = this._depth,
-      stack = new Array(depth);
-
-  function visit(nodes, depth) {
-    var i = -1,
-        n = nodes.length,
-        node;
-
-    if (--depth) {
-      var stack0 = depth * 2,
-          stack1 = stack0 + 1;
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[stack0] = node._parent.__data__, stack[stack1] = i;
-          visit(node, depth);
-        }
-      }
-    }
-
-    else {
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[0] = node.__data__, stack[1] = i;
-          callback.apply(node, stack);
-        }
-      }
-    }
-  }
-
-  visit(this._root, depth);
-  return this;
-}
-
-function selection_empty() {
-  return !this.node();
-}
-
-function selection_size() {
-  var size = 0;
-  this.each(function() { ++size; });
-  return size;
-}
-
-function firstNode(nodes, depth) {
-  var i = -1,
-      n = nodes.length,
-      node;
-
-  if (--depth) {
-    while (++i < n) {
-      if (node = nodes[i]) {
-        if (node = firstNode(node, depth)) {
-          return node;
-        }
-      }
-    }
-  }
-
-  else {
-    while (++i < n) {
-      if (node = nodes[i]) {
-        return node;
-      }
-    }
-  }
-}
-
-function selection_node() {
-  return firstNode(this._root, this._depth);
-}
-
-function selection_nodes() {
-  var nodes = new Array(this.size()), i = -1;
-  this.each(function() { nodes[++i] = this; });
-  return nodes;
-}
-
-function selection_call() {
-  var callback = arguments[0];
-  callback.apply(arguments[0] = this, arguments);
-  return this;
-}
-
-function arrayifyNode(nodes, depth) {
-  var i = -1,
-      n = nodes.length,
-      node;
-
-  if (--depth) {
-    while (++i < n) {
-      if (node = nodes[i]) {
-        nodes[i] = arrayifyNode(node, depth);
-      }
-    }
-  }
-
-  else if (!Array.isArray(nodes)) {
-    var array = new Array(n);
-    while (++i < n) array[i] = nodes[i];
-    array._parent = nodes._parent;
-    nodes = array;
-  }
-
-  return nodes;
-}
-
-
-// The leaf groups of the selection hierarchy are initially NodeList,
-// and then lazily converted to arrays when mutation is required.
-function arrayify(selection) {
-  return selection._root = arrayifyNode(selection._root, selection._depth);
-}
-
-function ascending(a, b) {
-  return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
-}
-
-function selection_sort(comparator) {
-  if (!comparator) comparator = ascending;
-
-  function compare(a, b) {
-    return a && b ? comparator(a.__data__, b.__data__) : !a - !b;
-  }
-
-  function visit(nodes, depth) {
-    if (--depth) {
-      var i = -1,
-          n = nodes.length,
-          node;
-      while (++i < n) {
-        if (node = nodes[i]) {
-          visit(node, depth);
-        }
-      }
-    }
-
-    else {
-      nodes.sort(compare);
-    }
-  }
-
-  visit(arrayify(this), this._depth);
-  return this.order();
-}
-
-function orderNode(nodes, depth) {
-  var i = nodes.length,
-      node,
-      next;
-
-  if (--depth) {
-    while (--i >= 0) {
-      if (node = nodes[i]) {
-        orderNode(node, depth);
-      }
-    }
-  }
-
-  else {
-    next = nodes[--i];
-    while (--i >= 0) {
-      if (node = nodes[i]) {
-        if (next && next !== node.nextSibling) next.parentNode.insertBefore(node, next);
-        next = node;
-      }
-    }
-  }
-}
-
-function selection_order() {
-  orderNode(this._root, this._depth);
-  return this;
-}
-
-function emptyNode(nodes, depth) {
-  var i = -1,
-      n = nodes.length,
-      node,
-      empty = new Array(n);
-
-  if (--depth) {
-    while (++i < n) {
-      if (node = nodes[i]) {
-        empty[i] = emptyNode(node, depth);
-      }
-    }
-  }
-
-  empty._parent = nodes._parent;
-  return empty;
-}
-
-function emptyOf(selection) {
-  return new Selection(emptyNode(arrayify(selection), selection._depth), selection._depth);
-}
-
-
-// Lazily constructs the exit selection for this (update) selection.
-// Until this selection is joined to data, the exit selection will be empty.
-function selection_exit() {
-  return this._exit || (this._exit = emptyOf(this));
-}
-
-
-// Lazily constructs the enter selection for this (update) selection.
-// Until this selection is joined to data, the enter selection will be empty.
-function selection_enter() {
-  if (!this._enter) {
-    this._enter = emptyOf(this);
-    this._enter._update = this;
-  }
-  return this._enter;
-}
-
-function EnterNode(parent, datum) {
-  this.ownerDocument = parent.ownerDocument;
-  this.namespaceURI = parent.namespaceURI;
-  this._next = null;
-  this._parent = parent;
-  this.__data__ = datum;
-}
-
-EnterNode.prototype = {
-  appendChild: function(child) { return this._parent.insertBefore(child, this._next); },
-  insertBefore: function(child, next) { return this._parent.insertBefore(child, next || this._next); }
-};
-
-function valueOf_(value) { // XXX https://github.com/rollup/rollup/issues/12
-  return function() {
-    return value;
-  };
-}
-
-
-// The value may either be an array or a function that returns an array.
-// An optional key function may be specified to control how data is bound;
-// if no key function is specified, data is bound to nodes by index.
-// Or, if no arguments are specified, this method returns all bound data.
-function selection_data(value, key) {
-  if (!value) {
-    var data = new Array(this.size()), i = -1;
-    this.each(function(d) { data[++i] = d; });
-    return data;
-  }
-
-  var depth = this._depth - 1,
-      stack = new Array(depth * 2),
-      bind = key ? bindKey : bindIndex;
-
-  if (typeof value !== "function") value = valueOf_(value);
-  visit(this._root, this.enter()._root, this.exit()._root, depth);
-
-  function visit(update, enter, exit, depth) {
-    var i = -1,
-        n,
-        node;
-
-    if (depth--) {
-      var stack0 = depth * 2,
-          stack1 = stack0 + 1;
-
-      n = update.length;
-
-      while (++i < n) {
-        if (node = update[i]) {
-          stack[stack0] = node._parent.__data__, stack[stack1] = i;
-          visit(node, enter[i], exit[i], depth);
-        }
-      }
-    }
-
-    else {
-      var j = 0,
-          before;
-
-      bind(update, enter, exit, value.apply(update._parent, stack));
-      n = update.length;
-
-      // Now connect the enter nodes to their following update node, such that
-      // appendChild can insert the materialized enter node before this node,
-      // rather than at the end of the parent node.
-      while (++i < n) {
-        if (before = enter[i]) {
-          if (i >= j) j = i + 1;
-          while (!(node = update[j]) && ++j < n);
-          before._next = node || null;
-        }
-      }
-    }
-  }
-
-  function bindIndex(update, enter, exit, data) {
-    var i = 0,
-        node,
-        nodeLength = update.length,
-        dataLength = data.length,
-        minLength = Math.min(nodeLength, dataLength);
-
-    // Clear the enter and exit arrays, and then initialize to the new length.
-    enter.length = 0, enter.length = dataLength;
-    exit.length = 0, exit.length = nodeLength;
-
-    for (; i < minLength; ++i) {
-      if (node = update[i]) {
-        node.__data__ = data[i];
-      } else {
-        enter[i] = new EnterNode(update._parent, data[i]);
-      }
-    }
-
-    // Note: we don’t need to delete update[i] here because this loop only
-    // runs when the data length is greater than the node length.
-    for (; i < dataLength; ++i) {
-      enter[i] = new EnterNode(update._parent, data[i]);
-    }
-
-    // Note: and, we don’t need to delete update[i] here because immediately
-    // following this loop we set the update length to data length.
-    for (; i < nodeLength; ++i) {
-      if (node = update[i]) {
-        exit[i] = update[i];
-      }
-    }
-
-    update.length = dataLength;
-  }
-
-  function bindKey(update, enter, exit, data) {
-    var i,
-        node,
-        dataLength = data.length,
-        nodeLength = update.length,
-        nodeByKeyValue = new Map,
-        keyStack = new Array(2).concat(stack),
-        keyValues = new Array(nodeLength),
-        keyValue;
-
-    // Clear the enter and exit arrays, and then initialize to the new length.
-    enter.length = 0, enter.length = dataLength;
-    exit.length = 0, exit.length = nodeLength;
-
-    // Compute the keys for each node.
-    for (i = 0; i < nodeLength; ++i) {
-      if (node = update[i]) {
-        keyStack[0] = node.__data__, keyStack[1] = i;
-        keyValues[i] = keyValue = key.apply(node, keyStack);
-
-        // Is this a duplicate of a key we’ve previously seen?
-        // If so, this node is moved to the exit selection.
-        if (nodeByKeyValue.has(keyValue)) {
-          exit[i] = node;
-        }
-
-        // Otherwise, record the mapping from key to node.
-        else {
-          nodeByKeyValue.set(keyValue, node);
-        }
-      }
-    }
-
-    // Now clear the update array and initialize to the new length.
-    update.length = 0, update.length = dataLength;
-
-    // Compute the keys for each datum.
-    for (i = 0; i < dataLength; ++i) {
-      keyStack[0] = data[i], keyStack[1] = i;
-      keyValue = key.apply(update._parent, keyStack);
-
-      // Is there a node associated with this key?
-      // If not, this datum is added to the enter selection.
-      if (!(node = nodeByKeyValue.get(keyValue))) {
-        enter[i] = new EnterNode(update._parent, data[i]);
-      }
-
-      // Did we already bind a node using this key? (Or is a duplicate?)
-      // If unique, the node and datum are joined in the update selection.
-      // Otherwise, the datum is ignored, neither entering nor exiting.
-      else if (node !== true) {
-        update[i] = node;
-        node.__data__ = data[i];
-      }
-
-      // Record that we consumed this key, either to enter or update.
-      nodeByKeyValue.set(keyValue, true);
-    }
-
-    // Take any remaining nodes that were not bound to data,
-    // and place them in the exit selection.
-    for (i = 0; i < nodeLength; ++i) {
-      if ((node = nodeByKeyValue.get(keyValues[i])) !== true) {
-        exit[i] = node;
-      }
-    }
-  }
-
-  return this;
-}
-
-var filterOf = function(selector) {
-  return function() {
-    return this.matches(selector);
-  };
-};
-
-if (typeof document !== "undefined") {
-  var element = document.documentElement;
-  if (!element.matches) {
-    var vendorMatches = element.webkitMatchesSelector || element.msMatchesSelector || element.mozMatchesSelector || element.oMatchesSelector;
-    filterOf = function(selector) { return function() { return vendorMatches.call(this, selector); }; };
-  }
-}
-
-
-// The filter may either be a selector string (e.g., ".foo")
-// or a function that returns a boolean.
-function selection_filter(filter) {
-  var depth = this._depth,
-      stack = new Array(depth * 2);
-
-  if (typeof filter !== "function") filter = filterOf(filter);
-
-  function visit(nodes, depth) {
-    var i = -1,
-        n = nodes.length,
-        node,
-        subnodes;
-
-    if (--depth) {
-      var stack0 = depth * 2,
-          stack1 = stack0 + 1;
-      subnodes = new Array(n);
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[stack0] = node._parent.__data__, stack[stack1] = i;
-          subnodes[i] = visit(node, depth);
-        }
-      }
-    }
-
-    // The filter operation does not preserve the original index,
-    // so the resulting leaf groups are dense (not sparse).
-    else {
-      subnodes = [];
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[0] = node.__data__, stack[1] = i;
-          if (filter.apply(node, stack)) {
-            subnodes.push(node);
-          }
-        }
-      }
-    }
-
-    subnodes._parent = nodes._parent;
-    return subnodes;
-  }
-
-  return new Selection(visit(this._root, depth), depth);
-}
-
-function selectorAllOf(selector) {
-  return function() {
-    return this.querySelectorAll(selector);
-  };
-}
-
-
-// The selector may either be a selector string (e.g., ".foo")
-// or a function that optionally returns an array of nodes to select.
-// This is the only operation that increases the depth of a selection.
-function selection_selectAll(selector) {
-  var depth = this._depth,
-      stack = new Array(depth * 2);
-
-  if (typeof selector !== "function") selector = selectorAllOf(selector);
-
-  function visit(nodes, depth) {
-    var i = -1,
-        n = nodes.length,
-        node,
-        subnode,
-        subnodes = new Array(n);
-
-    if (--depth) {
-      var stack0 = depth * 2,
-          stack1 = stack0 + 1;
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[stack0] = node._parent.__data__, stack[stack1] = i;
-          subnodes[i] = visit(node, depth);
-        }
-      }
-    }
-
-    // Data is not propagated since there is a one-to-many mapping.
-    // The parent of the new leaf group is the old node.
-    else {
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[0] = node.__data__, stack[1] = i;
-          subnodes[i] = subnode = selector.apply(node, stack);
-          subnode._parent = node;
-        }
-      }
-    }
-
-    subnodes._parent = nodes._parent;
-    return subnodes;
-  }
-
-  return new Selection(visit(this._root, depth), depth + 1);
-}
-
-
-// The selector may either be a selector string (e.g., ".foo")
-// or a function that optionally returns the node to select.
-function selection_select(selector) {
-  var depth = this._depth,
-      stack = new Array(depth * 2);
-
-  if (typeof selector !== "function") selector = selectorOf(selector);
-
-  function visit(nodes, update, depth) {
-    var i = -1,
-        n = nodes.length,
-        node,
-        subnode,
-        subnodes = new Array(n);
-
-    if (--depth) {
-      var stack0 = depth * 2,
-          stack1 = stack0 + 1;
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[stack0] = node._parent.__data__, stack[stack1] = i;
-          subnodes[i] = visit(node, update && update[i], depth);
-        }
-      }
-    }
-
-    // The leaf group may be sparse if the selector returns a falsey value;
-    // this preserves the index of nodes (unlike selection.filter).
-    // Propagate data to the new node only if it is defined on the old.
-    // If this is an enter selection, materialized nodes are moved to update.
-    else {
-      while (++i < n) {
-        if (node = nodes[i]) {
-          stack[0] = node.__data__, stack[1] = i;
-          if (subnode = selector.apply(node, stack)) {
-            if ("__data__" in node) subnode.__data__ = node.__data__;
-            if (update) update[i] = subnode, delete nodes[i];
-            subnodes[i] = subnode;
-          }
-        }
-      }
-    }
-
-    subnodes._parent = nodes._parent;
-    return subnodes;
-  }
-
-  return new Selection(visit(this._root, this._update && this._update._root, depth), depth);
-}
-
-function selection() {
-  return new Selection([document.documentElement], 1);
-}
-
-Selection.prototype = selection.prototype = {
-  select: selection_select,
-  selectAll: selection_selectAll,
-  filter: selection_filter,
-  data: selection_data,
-  enter: selection_enter,
-  exit: selection_exit,
-  order: selection_order,
-  sort: selection_sort,
-  call: selection_call,
-  nodes: selection_nodes,
-  node: selection_node,
-  size: selection_size,
-  empty: selection_empty,
-  each: selection_each,
-  attr: selection_attr,
-  style: selection_style,
-  property: selection_property,
-  class: selection_class,
-  classed: selection_class, // deprecated alias
-  text: selection_text,
-  html: selection_html,
-  append: selection_append,
-  insert: selection_append, // deprecated alias
-  remove: selection_remove,
-  datum: selection_datum,
-  event: selection_event,
-  on: selection_event, // deprecated alias
-  dispatch: selection_dispatch
-};
-
-function select(selector) {
-  return new Selection([typeof selector === "string" ? document.querySelector(selector) : selector], 1);
-}
-
-var methods = {
-  svg: ["container", function (container){
-    return select(container).append("svg");
-  }]
-};
-
-function pick(method){
-  var options = {};
-  options[method] = methods[method]
-  return options;
-}
-
-function ReactiveVis(model){
-  var chainable = {};
-  Object.keys(methods).forEach(function (method){
-    chainable[method] = function(){
-      model.react(pick(method));
-      return chainable;
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (factory((global.ReactiveVis = global.ReactiveVis || {})));
+}(this, function (exports) { 'use strict';
+
+  var __commonjs_global = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : this;
+  function __commonjs(fn, module) { return module = { exports: {} }, fn(module, module.exports, __commonjs_global), module.exports; }
+
+  var index$2 = __commonjs(function (module, exports, global) {
+  // UMD boilerplate (from Rollup)
+  (function (global, factory) {
+    typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() :
+    typeof define === "function" && define.amd ? define(factory) : (global.ReactiveProperty = factory());
+  }(__commonjs_global, function () { "use strict";
+
+    // Error messages for exceptions thrown.
+    var errors = {
+      tooManyArgsConstructor: "ReactiveProperty(value) accepts only a single argument, the initial value.",
+      tooManyArgsSetter: "reactiveProperty(newValue) accepts only a single argument, the new value.",
+      onNonFunction: "ReactiveProperty.on(listener) only accepts functions, not values.",
+      onArgs: "ReactiveProperty.on(listener) accepts exactly one argument, the listener function."
     };
+
+    // This function generates a getter-setter with change listeners.
+    return function ReactiveProperty(value){
+
+      // An array of registered listener functions.
+      var listeners;
+      
+      // Check for too many arguments.
+      if(arguments.length > 2) {
+        throw Error(errors.tooManyArgsConstructor);
+      }
+
+      // This is the reactive property function that gets returned.
+      function reactiveProperty(newValue){
+      
+        // Check for too many arguments.
+        if(arguments.length > 1) {
+          throw Error(errors.tooManyArgsSetter);
+        }
+        
+        // This implements the setter part of the setter-getter.
+        if(arguments.length === 1){
+
+          // Grab the old value for passing into the listener.
+          var oldValue = value;
+
+          // Track the new value internally.
+          value = newValue;
+
+          // Notify registered listeners.
+          if(listeners){
+            for(var i = 0; i < listeners.length; i++){
+              listeners[i](newValue, oldValue);
+            }
+          }
+
+          // Support method chaining by returning 'this'.
+          return this;
+        }
+
+        // This implements the getter part of the setter-getter.
+        return value;
+      }
+
+      // Registers a new listener to receive updates.
+      reactiveProperty.on = function (listener){
+
+        // Check for invalid types.
+        if(typeof listener !== "function"){
+          throw Error(errors.onNonFunction);
+        }
+
+        // Check for wrong number of arguments.
+        if(arguments.length > 1 || arguments.length === 0){
+          throw Error(errors.onArgs);
+        }
+
+        // If no listeners have been added yet, initialize the array.
+        if(!listeners){
+          listeners = [];
+        }
+
+        // Register the listener.
+        listeners.push(listener);
+
+        // If there is an initial value, invoke the listener immediately.
+        // null is considered as a defined value.
+        if(value !== void 0){
+          listener(value);
+        }
+
+        // For convenience, the listener is returned.
+        return listener;
+      };
+
+      // Unregisters the given listener function.
+      reactiveProperty.off = function (listenerToRemove){
+        if(listeners){
+          listeners = listeners.filter(function (listener){
+            return listener !== listenerToRemove;
+          });
+        }
+      };
+
+      // Unregisters all listeners.
+      reactiveProperty.destroy = function (){
+        listeners = [];
+      };
+
+      // Expose the default value
+      if(value){
+        var defaultValue = value;
+        reactiveProperty.default = function (){
+          return defaultValue;
+        };
+      }
+
+      return reactiveProperty;
+    };
+  }));
   });
-  return chainable;
-}
 
-var index = ReactiveVis;
+  var require$$1 = (index$2 && typeof index$2 === 'object' && 'default' in index$2 ? index$2['default'] : index$2);
 
-module.exports = index;
+  var index$4 = __commonjs(function (module) {
+  // A graph data structure with depth-first search and topological sort.
+  module.exports = function Graph(serialized){
+
+    // The returned graph instance.
+    var graph = {
+      addNode: addNode,
+      removeNode: removeNode,
+      nodes: nodes,
+      adjacent: adjacent,
+      addEdge: addEdge,
+      removeEdge: removeEdge,
+      indegree: indegree,
+      outdegree: outdegree,
+      depthFirstSearch: depthFirstSearch,
+      topologicalSort: topologicalSort,
+      serialize: serialize,
+      deserialize: deserialize
+    };
+
+    // The adjacency list of the graph.
+    // Keys are node ids.
+    // Values are adjacent node id arrays.
+    var edges = {};
+
+    // If a serialized graph was passed into the constructor, deserialize it.
+    if(serialized){
+      deserialize(serialized);
+    }
+
+    // Adds a node to the graph.
+    // If node was already added, this function does nothing.
+    // If node was not already added, this function sets up an empty adjacency list.
+    function addNode(node){
+      edges[node] = adjacent(node);
+      return graph;
+    }
+
+    // Removes a node from the graph.
+    // Also removes incoming and outgoing edges.
+    function removeNode(node){
+      
+      // Remove incoming edges.
+      Object.keys(edges).forEach(function (u){
+        edges[u].forEach(function (v){
+          if(v === node){
+            removeEdge(u, v);
+          }
+        });
+      });
+
+      // Remove outgoing edges (and signal that the node no longer exists).
+      delete edges[node];
+
+      return graph;
+    }
+
+    // Gets the list of nodes that have been added to the graph.
+    function nodes(){
+      var nodeSet = {};
+      Object.keys(edges).forEach(function (u){
+        nodeSet[u] = true;
+        edges[u].forEach(function (v){
+          nodeSet[v] = true;
+        });
+      });
+      return Object.keys(nodeSet);
+    }
+
+    // Gets the adjacent node list for the given node.
+    // Returns an empty array for unknown nodes.
+    function adjacent(node){
+      return edges[node] || [];
+    }
+
+    // Adds an edge from node u to node v.
+    // Implicitly adds the nodes if they were not already added.
+    function addEdge(u, v){
+      addNode(u);
+      addNode(v);
+      adjacent(u).push(v);
+      return graph;
+    }
+
+    // Removes the edge from node u to node v.
+    // Does not remove the nodes.
+    // Does nothing if the edge does not exist.
+    function removeEdge(u, v){
+      if(edges[u]){
+        edges[u] = adjacent(u).filter(function (_v){
+          return _v !== v;
+        });
+      }
+      return graph;
+    }
+
+    // Computes the indegree for the given node.
+    // Not very efficient, costs O(E) where E = number of edges.
+    function indegree(node){
+      var degree = 0;
+      function check(v){
+        if(v === node){
+          degree++;
+        }
+      }
+      Object.keys(edges).forEach(function (u){
+        edges[u].forEach(check);
+      });
+      return degree;
+    }
+
+    // Computes the outdegree for the given node.
+    function outdegree(node){
+      return node in edges ? edges[node].length : 0;
+    }
+
+    // Depth First Search algorithm, inspired by
+    // Cormen et al. "Introduction to Algorithms" 3rd Ed. p. 604
+    // This variant includes an additional option 
+    // `includeSourceNodes` to specify whether to include or
+    // exclude the source nodes from the result (true by default).
+    // If `sourceNodes` is not specified, all nodes in the graph
+    // are used as source nodes.
+    function depthFirstSearch(sourceNodes, includeSourceNodes){
+
+      if(!sourceNodes){
+        sourceNodes = nodes();
+      }
+
+      if(typeof includeSourceNodes !== "boolean"){
+        includeSourceNodes = true;
+      }
+
+      var visited = {};
+      var nodeList = [];
+
+      function DFSVisit(node){
+        if(!visited[node]){
+          visited[node] = true;
+          adjacent(node).forEach(DFSVisit);
+          nodeList.push(node);
+        }
+      }
+
+      if(includeSourceNodes){
+        sourceNodes.forEach(DFSVisit);
+      } else {
+        sourceNodes.forEach(function (node){
+          visited[node] = true;
+        });
+        sourceNodes.forEach(function (node){
+          adjacent(node).forEach(DFSVisit);
+        });
+      }
+
+      return nodeList;
+    }
+
+    // The topological sort algorithm yields a list of visited nodes
+    // such that for each visited edge (u, v), u comes before v in the list.
+    // Amazingly, this comes from just reversing the result from depth first search.
+    // Cormen et al. "Introduction to Algorithms" 3rd Ed. p. 613
+    function topologicalSort(sourceNodes, includeSourceNodes){
+      return depthFirstSearch(sourceNodes, includeSourceNodes).reverse();
+    }
+
+    // Serializes the graph.
+    function serialize(){
+      var serialized = {
+        nodes: nodes().map(function (id){
+          return { id: id };
+        }),
+        links: []
+      };
+
+      serialized.nodes.forEach(function (node){
+        var source = node.id;
+        adjacent(source).forEach(function (target){
+          serialized.links.push({
+            source: source,
+            target: target
+          });
+        });
+      });
+
+      return serialized;
+    }
+
+    // Deserializes the given serialized graph.
+    function deserialize(serialized){
+      serialized.nodes.forEach(function (node){ addNode(node.id); });
+      serialized.links.forEach(function (link){ addEdge(link.source, link.target); });
+      return graph;
+    }
+    
+    return graph;
+  }
+  });
+
+  var require$$0 = (index$4 && typeof index$4 === 'object' && 'default' in index$4 ? index$4['default'] : index$4);
+
+  var index$3 = __commonjs(function (module) {
+  var ReactiveProperty = require$$1;
+  var Graph = require$$0;
+
+  // Use requestAnimationFrame if it is available.
+  // Otherwise fall back to setTimeout.
+  var nextFrame = setTimeout;
+  if(typeof requestAnimationFrame !== 'undefined') {
+    nextFrame = requestAnimationFrame;
+  }
+
+  // The singleton data dependency graph.
+  // Nodes are reactive properties.
+  // Edges are dependencies between reactive function inputs and outputs.
+  var graph = Graph();
+
+  // A map for looking up properties based on their assigned id.
+  // Keys are property ids, values are reactive properties.
+  var properties = {};
+
+  // This object accumulates properties that have changed since the last digest.
+  // Keys are property ids, values are truthy (the object acts like a Set).
+  var changed = {};
+
+  // Assigns an id to a reactive property so it can be a node in the graph.
+  // Also stores a reference to the property by id in `properties`.
+  // If the given property already has an id, does nothing.
+  var assignId = (function(){
+    var counter = 1;
+    return function (property){
+      if(!property.id){
+        property.id = String(counter++);
+        properties[property.id] = property;
+      }
+    };
+  }());
+
+  // The reactive function constructor.
+  // Accepts an options object with
+  //  * inputs - An array of reactive properties.
+  //  * callback - A function with arguments corresponding to values of inputs.
+  //  * output - A reactive property (optional).
+  function ReactiveFunction(options){
+
+    var inputs = options.inputs;
+    var callback = options.callback;
+    var output = options.output;
+    
+    if(!output){
+      output = function (){};
+      output.propertyName = "";
+    }
+
+    // This gets invoked during a digest, after inputs have been evaluated.
+    output.evaluate = function (){
+
+      // Get the values for each of the input reactive properties.
+      var values = inputs.map(function (input){
+        return input();
+      });
+
+      // If all input values are defined,
+      if(defined(values)){
+
+        // invoke the callback and assign the output value.
+        output(callback.apply(null, values));
+      }
+
+    };
+
+    // Assign node ids to inputs and output.
+    assignId(output);
+    inputs.forEach(assignId);
+
+    // Set up edges in the graph from each input.
+    inputs.forEach(function (input){
+      graph.addEdge(input.id, output.id);
+    });
+
+    // Add change listeners to each input property.
+    // These mark the properties as changed and queue the next digest.
+    var listeners = inputs.map(function (property){
+      return property.on(function (){
+        changed[property.id] = true;
+        queueDigest();
+      });
+    });
+
+    // Return an object that can destroy the listeners and edges set up.
+    return {
+
+      // This function must be called to explicitly destroy a reactive function.
+      // Garbage collection is not enough, as we have added listeners and edges.
+      destroy: function (){
+
+        // Remove change listeners from inputs.
+        listeners.forEach(function (listener, i){
+          inputs[i].off(listener);
+        });
+
+        // Remove the edges that were added to the dependency graph.
+        inputs.forEach(function (input){
+          graph.removeEdge(input.id, output.id);
+        });
+
+        // Remove property nodes with no edges connected.
+        inputs.concat([output]).forEach(function (property){
+          var node = property.id;
+          if(graph.indegree(node) + graph.outdegree(node) === 0){
+            graph.removeNode(property.id);
+          }
+        });
+
+        // Remove the reference to the 'evaluate' function.
+        delete output.evaluate;
+
+        // Remove references to everything.
+        inputs = callback = output = undefined;
+      }
+    };
+  }
+
+  // Propagates changes through the dependency graph.
+  ReactiveFunction.digest = function (){
+    graph
+      .topologicalSort(Object.keys(changed), false)
+      .map(function (id){
+        return properties[id];
+      })
+      .forEach(function (property){
+        property.evaluate();
+      });
+
+    changed = {};
+  };
+
+  // This function queues a digest at the next tick of the event loop.
+  var queueDigest = debounce(ReactiveFunction.digest);
+
+  // Returns a function that, when invoked, schedules the given function
+  // to execute once on the next frame.
+  // Similar to http://underscorejs.org/#debounce
+  function debounce(callback){
+    var queued = false;
+    return function () {
+      if(!queued){
+        queued = true;
+        nextFrame(function () {
+          queued = false;
+          callback();
+        }, 0);
+      }
+    };
+  }
+
+  // Returns true if all elements of the given array are defined.
+  function defined(arr){
+    return !arr.some(isUndefined);
+  }
+
+  // Returns true if the given object is undefined.
+  // Returns false if the given object is some value, including null.
+  // Inspired by http://ryanmorr.com/exploring-the-eternal-abyss-of-null-and-undefined/
+  function isUndefined(obj){
+    return obj === void 0;
+  }
+
+  ReactiveFunction.nextFrame = nextFrame;
+
+  ReactiveFunction.serializeGraph = function (){
+    var serialized = graph.serialize();
+
+    // Add property names.
+    serialized.nodes.forEach(function (node){
+      var propertyName = properties[node.id].propertyName;
+      if(typeof propertyName !== "undefined"){
+        node.propertyName = propertyName;
+      }
+    });
+
+    return serialized;
+  }
+
+  ReactiveFunction.link = function (propertyA, propertyB){
+    return ReactiveFunction({
+      inputs: [propertyA],
+      output: propertyB,
+      callback: function (x){ return x; }
+    });
+  }
+
+  module.exports = ReactiveFunction;
+  });
+
+  var require$$1$1 = (index$3 && typeof index$3 === 'object' && 'default' in index$3 ? index$3['default'] : index$3);
+
+  var index = __commonjs(function (module) {
+  // By Curran Kelleher April 2016
+
+  var ReactiveFunction = require$$1$1;
+  var ReactiveProperty = require$$1;
+
+  // Functional utility for invoking methods on collections.
+  function invoke(method){
+    return function(d){
+      return d[method]();
+    };
+  }
+
+  // The constructor for reactive models.
+  // This function is exported as the public API of this module.
+  function ReactiveModel(){
+
+    // An array of property names for exposed properties.
+    var exposedProperties;
+
+    // This is a string, the name of the last property added.
+    // This is used in `expose()`;
+    var lastPropertyAdded;
+
+    // The configuration of the model is represented as an object and stored
+    // in this reactive property. Note that only values for exposed properties
+    // whose values differ from their defaults are included in the configuration object.
+    // The purpose of the configuration accessor API is serialization and deserialization,
+    // so default values are left out for a concise serialized form.
+    var configurationProperty = ReactiveProperty();
+    configurationProperty.propertyName = "configuration";
+
+    // This is a reactive function set up to listen for changes in all
+    // exposed properties and set the configurationProperty value.
+    var configurationReactiveFunction;
+
+    // An array of reactive functions that have been set up on this model.
+    // These are tracked only so they can be destroyed in model.destroy().
+    var reactiveFunctions = [];
+
+    // The model instance object.
+    // This is the value returned from the constructor.
+    var model = function (){
+      var outputPropertyName, callback, inputPropertyNames
+
+      if(arguments.length === 0){
+        return configurationProperty();
+      } else if(arguments.length === 1){
+        if(typeof arguments[0] === "object"){
+
+          // The invocation is of the form model(configuration)
+          return setConfiguration(arguments[0]);
+        } else {
+
+          // The invocation is of the form model(propertyName)
+          return addProperty(arguments[0]);
+        }
+      } else if(arguments.length === 2){
+        if(typeof arguments[0] === "function"){
+
+          // The invocation is of the form model(callback, inputPropertyNames)
+          inputPropertyNames = arguments[1];
+          callback = arguments[0];
+          outputPropertyName = undefined;
+        } else {
+
+          // The invocation is of the form model(propertyName, defaultValue)
+          return addProperty(arguments[0], arguments[1]);
+        }
+      } else if(arguments.length === 3){
+        outputPropertyName = arguments[0];
+        callback = arguments[1];
+        inputPropertyNames = arguments[2];
+      }
+
+      // inputPropertyNames may be a string of comma-separated property names,
+      // or an array of property names.
+      if(typeof inputPropertyNames === "string"){
+        inputPropertyNames = inputPropertyNames.split(",").map(invoke("trim"));
+      }
+
+      // TODO throw an error if a property is not on the model.
+      var inputs = inputPropertyNames.map(getProperty);
+
+      // Create a new reactive property for the output and assign it to the model.
+      // TODO throw an error if the output property is already defined on the model.
+      if(outputPropertyName){
+        var output = ReactiveProperty();
+        output.propertyName = outputPropertyName;
+        model[outputPropertyName] = output;
+      }
+
+      // If the number of arguments expected by the callback is one greater than the
+      // number of inputs, then the last argument is the "done" callback, and this
+      // reactive function will be set up to be asynchronous. The "done" callback should
+      // be called with the new value of the output property asynchronously.
+      var isAsynchronous = (callback.length === inputs.length + 1);
+      if(isAsynchronous){
+        reactiveFunctions.push(ReactiveFunction({
+          inputs: inputs,
+          callback: function (){
+
+            // Convert the arguments passed into this function into an array.
+            var args = Array.prototype.slice.call(arguments);
+
+            // Push the "done" callback onto the args array.
+            // We are actally passing the output reactive property here, invoking it
+            // as the "done" callback will set the value of the output property.
+            args.push(output);
+
+            // Wrap in setTimeout to guarantee that the output property is set
+            // asynchronously, outside of the current digest. This is necessary
+            // to ensure that if developers inadvertently invoke the "done" callback 
+            // synchronously, their code will still have the expected behavior.
+            setTimeout(function (){
+
+              // Invoke the original callback with the args array as arguments.
+              callback.apply(null, args);
+            });
+          }
+        }));
+      } else {
+        reactiveFunctions.push(ReactiveFunction({
+          inputs: inputs,
+          output: output, // This may be undefined.
+          callback: callback
+        }));
+      }
+      return model;
+    };
+
+    // Gets a reactive property from the model by name.
+    // Convenient for functional patterns like `propertyNames.map(getProperty)`
+    function getProperty(propertyName){
+      return model[propertyName];
+    }
+
+    // Adds a property to the model that is not exposed,
+    // meaning that it is not included in the configuration object.
+    function addProperty(propertyName, defaultValue){
+      var property = ReactiveProperty(defaultValue);
+      property.propertyName = propertyName;
+      model[propertyName] = property;
+      lastPropertyAdded = propertyName;
+      return model;
+
+      // TODO throw an error if the name is not available (e.g. another property name, "configuration" or "addPublicProperty").
+    }
+
+    // Exposes the last added property to the configuration.
+    function expose(){
+
+      // TODO test this
+      // if(!isDefined(defaultValue)){
+      //  throw new Error("model.addPublicProperty() is being " +
+      //    "invoked with an undefined default value. Default values for exposed properties " +
+      //    "must be defined, to guarantee predictable behavior. For exposed properties that " +
+      //    "are optional and should have the semantics of an undefined value, " +
+      //    "use null as the default value.");
+      //}
+
+      // TODO test this
+      if(!lastPropertyAdded){
+        throw Error("Expose() was called without first adding a property.");
+      }
+
+      var propertyName = lastPropertyAdded;
+
+      if(!exposedProperties){
+        exposedProperties = [];
+      }
+      exposedProperties.push(propertyName);
+
+      // Destroy the previous reactive function that was listening for changes
+      // in all exposed properties except the newly added one.
+      // TODO think about how this might be done only once, at the same time isFinalized is set.
+      if(configurationReactiveFunction){
+        configurationReactiveFunction.destroy();
+      }
+
+      // Set up the new reactive function that will listen for changes
+      // in all exposed properties including the newly added one.
+      var inputPropertyNames = exposedProperties;
+
+      //console.log(inputPropertyNames);
+      configurationReactiveFunction = ReactiveFunction({
+        inputs: inputPropertyNames.map(getProperty),
+        output: configurationProperty,
+        callback: function (){
+          var configuration = {};
+          inputPropertyNames.forEach(function (propertyName){
+            var property = getProperty(propertyName);
+
+            // Omit default values from the returned configuration object.
+            if(property() !== property.default()){
+              configuration[propertyName] = property();
+            }
+          });
+          return configuration;
+        }
+      });
+
+      // Support method chaining.
+      return model;
+    }
+
+    function setConfiguration(newConfiguration){
+
+      exposedProperties.forEach(function (propertyName){
+        var property = getProperty(propertyName);
+        var oldValue = property();
+        var newValue;
+
+        if(propertyName in newConfiguration){
+          newValue = newConfiguration[propertyName];
+        } else {
+          newValue = property.default();
+        }
+
+        if(oldValue !== newValue){
+          model[propertyName](newValue);
+        }
+      });
+
+      return model;
+    }
+
+    // Destroys all reactive functions that have been added to the model.
+    function destroy(){
+      reactiveFunctions.forEach(invoke("destroy"));
+
+      if(configurationReactiveFunction){
+        configurationReactiveFunction.destroy();
+      }
+
+      // TODO destroy all properties on the model, remove their listeners and nodes in the graph.
+
+      // TODO test bind case
+    }
+
+    function call (fn){
+      var args = Array.prototype.slice.call(arguments);
+      args[0] = model;
+      fn.apply(null, args);
+      return model;
+    };
+
+    model.expose = expose;
+    model.destroy = destroy;
+    model.call = call;
+    model.on = function (callback){
+    
+      // Ensure the callback is invoked asynchronously,
+      // so that property values can be set inside it.
+      return configurationProperty.on(function (newConfiguration){
+        setTimeout(function (){
+          callback(newConfiguration);
+        }, 0);
+      });
+    };
+
+    model.off = configurationProperty.off;
+
+    return model;
+  }
+
+  // Expose static functions from ReactiveFunction.
+  ReactiveModel.digest         = ReactiveFunction.digest;
+  ReactiveModel.serializeGraph = ReactiveFunction.serializeGraph;
+  ReactiveModel.link           = ReactiveFunction.link;
+
+  //ReactiveModel.nextFrame = ReactiveFunction.nextFrame;
+
+  module.exports = ReactiveModel;
+  });
+
+  // Resizes the SVG container.
+  function SVG (my){
+    my("svg")
+      ("width", 960)
+      ("height", 500)
+      ("svg-width", function (svg, width){
+        svg.attr("width", width);
+      }, "svg, width")
+      ("svg-height", function (svg, height){
+        svg.attr("height", height);
+      }, "svg, height");
+  }
+
+  exports.SVG = SVG;
+
+}));

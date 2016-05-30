@@ -4,17 +4,27 @@ var jsdom = require("jsdom");
 var d3 = require("d3-selection");
 var assert = require("assert");
 
-function createContainer(){
+function createSVG(){
   var document = jsdom.jsdom();
-  return d3.select(document.body).append("div").node();
+  return d3.select(document.body).append("svg");
 }
 
 describe("ReactiveVis", function(){
-  it("svg", function(){
-    var model = new ReactiveModel();
-    ReactiveVis(model).svg();
-    model.container(createContainer());
-    ReactiveModel.digest();
-    assert.equal(model.svg().node().tagName, "svg")
+  describe("SVG", function(){
+    it("Should set width and height", function(){
+      var my = new ReactiveModel()
+        .call(ReactiveVis.SVG)
+        .svg(createSVG());
+
+      ReactiveModel.digest();
+      assert(my.svg().attr("width", 960));
+      assert(my.svg().attr("height", 500));
+
+      my.width(100).height(200);
+
+      ReactiveModel.digest();
+      assert(my.svg().attr("width", 100));
+      assert(my.svg().attr("height", 200));
+    });
   });
 });
