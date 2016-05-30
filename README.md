@@ -13,3 +13,10 @@ This project is about encapsulating dynamic behaviors that are common to many da
     <img src="https://cloud.githubusercontent.com/assets/68416/15298394/a7a0a66a-1bbc-11e6-9636-367bed9165fc.png">
   </a>
 </p>
+
+## Related Work
+
+The build tooling for this project draws from:
+
+ * [D3 Custom Bundle II](http://bl.ocks.org/mbostock/97557a39b4bfc8229786c8bccb54074d)
+ * [rollup-starter-project](https://github.com/rollup/rollup-starter-project)
