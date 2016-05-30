@@ -42,12 +42,32 @@ Properties added:
 
 Reactive functions:
 
- * `svg-width` Sets the `width` attribute of the SVG element based on the value of model.*width*.
- * `svg-height` Sets the `height` attribute of the SVG element based on the value of model.*height*.
-
-Reactive functions
+ * *svg-width* Sets the `width` attribute of the SVG element based on the value of model.*width*.
+ * *svg-height* Sets the `height` attribute of the SVG element based on the value of model.*height*.
 
 ### Margin
+
+<a name="margin" href="#margin">#</a> ReactiveVis.<b>Margin</b>(<i>model</i>)
+
+Encapsulates the [D3 Margin Convention](https://bl.ocks.org/mbostock/3019563). Depends on [SVG](#svg).
+
+<p align="center">
+  <img src="https://cloud.githubusercontent.com/assets/68416/15652243/74641c0a-26a2-11e6-83ba-05ad6f18f84e.png">
+</p>
+
+Properties added:
+
+ * model.*marginRight*
+ * model.*marginLeft*
+ * model.*marginBottom*
+ * model.*marginTop*
+ * model.*innerWidth*
+ * model.*innerHeight*
+ * model.*g*
+
+Reactive functions:
+
+ * *g-transform*
 
 ## Related Work
 
