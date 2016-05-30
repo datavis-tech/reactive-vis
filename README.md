@@ -17,6 +17,15 @@ This project is about encapsulating dynamic behaviors that are common to many da
   <a href="https://github.com/d3/d3">D3</a>
 </p>
 
+## API Reference
+
+ * [SVG](#svg)
+ * [Margin](#margin)
+
+### SVG
+
+### Margin
+
 ## Related Work
 
 The build tooling for this project draws from:
