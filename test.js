@@ -4,9 +4,15 @@ var jsdom = require("jsdom");
 var d3 = require("d3-selection");
 var assert = require("assert");
 
+
+//import { SVG, Margin } from "./index.js";
+//import ReactiveModel from "reactive-model";
+//import jsdom from "jsdom";
+//import assert from "assert";
+//import select from "d3-selection";
+
 function createSVG(){
-  var document = jsdom.jsdom();
-  return d3.select(document.body).append("svg");
+  return d3.select(jsdom.jsdom().body).append("svg");
 }
 
 describe("ReactiveVis", function(){
