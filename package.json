@@ -13,6 +13,9 @@
   },
   "keywords": [
     "visualization",
+    "data",
+    "reactive",
+    "dataflow",
     "frp"
   ],
   "author": "Curran Kelleher",
