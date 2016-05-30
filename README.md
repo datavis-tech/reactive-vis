@@ -19,10 +19,33 @@ This project is about encapsulating dynamic behaviors that are common to many da
 
 ## API Reference
 
+Each function is a "reactive mixin", meaning that it can be invoked using <a href="https://github.com/datavis-tech/reactive-model/#call"><i>model</i>.<b>call</b></a>. For all functions, the first argument *model* is an instance of [reactive-model](https://github.com/datavis-tech/reactive-model). Each function adds new properties and reactive functions to the specified *model*.
+
+Note that names for nodes in the data flow graph diagrams follow the convention that `camelCase` names are properties with values, and `dash-separated` names reactive functions that have side effects but no returned value (typically these are DOM manipulations). Hyphenated names serve only to document what the reactive function does, they are never actually assigned values.
+
  * [SVG](#svg)
  * [Margin](#margin)
 
 ### SVG
+
+<a name="svg" href="#svg">#</a> ReactiveVis.<b>SVG</b>(<i>model</i>)
+
+<p align="center">
+  <img src="https://cloud.githubusercontent.com/assets/68416/15651271/28c7088a-269c-11e6-99e8-209a735d7314.png">
+</p>
+
+Properties added:
+
+ * model.*svg* A D3 Selection of an SVG element. This should be set exactly once. This selection will be the root of the visualization DOM tree, and will be accessed by other mixins.
+ * model.*width* An integer representing the width (in pixels) of the SVG element. The default value is 960 (the default width of examples on [bl.ocks.org](http://bl.ocks.org/)).
+ * model.*height* An integer representing the width (in pixels) of the SVG element. The default value is 500 (the default height of examples on [bl.ocks.org](http://bl.ocks.org/).
+
+Reactive functions:
+
+ * `svg-width` Sets the `width` attribute of the SVG element based on the value of model.*width*.
+ * `svg-height` Sets the `height` attribute of the SVG element based on the value of model.*height*.
+
+Reactive functions
 
 ### Margin
 
