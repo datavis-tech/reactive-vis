@@ -4,6 +4,19 @@ var jsdom = require("jsdom");
 var d3 = require("d3-selection");
 var assert = require("assert");
 
+var graphDiagrams = require("graph-diagrams");
+var outputGraph = graphDiagrams({
+
+  // If true, writes graph files to ../graph-diagrams for visualization.
+  outputGraphs: false,
+  project: "reactive-vis"
+});
+
+// Convenience function to output graphs for visualization.
+function output(name){
+  outputGraph(ReactiveModel.serializeGraph(), name);
+}
+
 
 //import { SVG, Margin } from "./index.js";
 //import ReactiveModel from "reactive-model";
@@ -31,6 +44,9 @@ describe("ReactiveVis", function(){
       ReactiveModel.digest();
       assert(my.svg().attr("width", 100));
       assert(my.svg().attr("height", 200));
+      
+      output("svg");
+      my.destroy();
     });
   });
 
@@ -56,6 +72,9 @@ describe("ReactiveVis", function(){
       ReactiveModel.digest();
       assert(my.innerWidth(), my.width() - my.width() - my.marginLeft() - my.marginRight());
       assert(my.innerHeight(), my.height() - my.marginTop() - my.marginBottom());
+
+      output("margin");
+      my.destroy();
     });
 
     it("Should append g to svg", function(){
