@@ -82,11 +82,11 @@ describe("Margin", function(){
 
     my.svg(svg);
     ReactiveModel.digest();
-    assert.equal(svg.node().children.length, 1);
+    assert.equal(svg.children.length, 1);
 
     my.svg(svg);
     ReactiveModel.digest();
-    assert.equal(svg.node().children.length, 1);
+    assert.equal(svg.children.length, 1);
 
     // Covers the .merge line in "g" definition.
     my.marginTop(10).marginLeft(12);

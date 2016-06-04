@@ -8,19 +8,20 @@ var createSVG = common.createSVG;
 
 describe("SVG", function(){
   it("Should set width and height", function(){
+    var svg = createSVG();
     var my = new ReactiveModel()
       .call(ReactiveVis.SVG)
-      .svg(createSVG());
+      .svg(svg)
 
     ReactiveModel.digest();
-    assert(my.svg().attr("width", 960));
-    assert(my.svg().attr("height", 500));
+    assert(svg.getAttribute("width", 960));
+    assert(svg.getAttribute("height", 500));
 
     my.width(100).height(200);
 
     ReactiveModel.digest();
-    assert(my.svg().attr("width", 100));
-    assert(my.svg().attr("height", 200));
+    assert(svg.getAttribute("width", 100));
+    assert(svg.getAttribute("height", 200));
     
     output("svg");
     my.destroy();

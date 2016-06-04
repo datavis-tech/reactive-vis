@@ -36,7 +36,7 @@ Note that names for nodes in the data flow graph diagrams follow the convention 
 
 Properties added:
 
- * *model*.**svg** A D3 Selection of an SVG element. This should be set exactly once. This selection will be the root of the visualization DOM tree, and will be accessed by other mixins.
+ * *model*.**svg** An SVG DOM element. This may be set any number of times. This will be the root of the visualization DOM tree, and will be accessed by other mixins.
  * *model*.**width** An integer representing the width (in pixels) of the SVG element. The default value is 960 (the default width of examples on [bl.ocks.org](http://bl.ocks.org/)).
  * *model*.**height** An integer representing the width (in pixels) of the SVG element. The default value is 500 (the default height of examples on [bl.ocks.org](http://bl.ocks.org/).
 
@@ -49,7 +49,7 @@ Reactive functions:
 
 <a name="margin" href="#margin">#</a> ReactiveVis.<b>Margin</b>(<i>model</i>)
 
-Encapsulates the [D3 Margin Convention](https://bl.ocks.org/mbostock/3019563). Depends on [SVG](#svg).
+Encapsulates margins. Inspired by [D3 Margin Convention](https://bl.ocks.org/mbostock/3019563). Depends on [SVG](#svg).
 
 <p align="center">
   <img src="https://cloud.githubusercontent.com/assets/68416/15652243/74641c0a-26a2-11e6-83ba-05ad6f18f84e.png">

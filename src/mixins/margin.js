@@ -1,4 +1,4 @@
-import select from "d3-selection";
+import { select } from "d3-selection";
 
 // Encapsulates the margin convention.
 export default function Margin(my){
@@ -15,16 +15,16 @@ export default function Margin(my){
       return height - marginTop - marginBottom;
     }, "height, marginTop, marginBottom")
 
-    ("g", function (svg){
+    ("g", function (svgSelection){
 
-      var g = svg.selectAll(".reactive-vis-margin-g")
+      var g = svgSelection.selectAll(".reactive-vis-margin-g")
         .data([1]);
 
       return g.enter().append("g")
         .attr("class", "reactive-vis-margin-g")
         .merge(g);
 
-    }, "svg")
+    }, "svgSelection")
 
     ("g-transform", function (g, marginLeft, marginTop){
       g.attr("transform", "translate(" + marginLeft + "," + marginTop + ")");

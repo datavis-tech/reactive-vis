@@ -15,8 +15,11 @@ function output(name){
   outputGraph(ReactiveModel.serializeGraph(), name);
 }
 
+// Creates and returns an SVG element using jsdom.
 function createSVG(){
-  return d3.select(jsdom.jsdom().body).append("svg");
+  return d3.select(jsdom.jsdom().body)
+    .append("svg")
+    .node();
 }
 
 module.exports = {
