@@ -4,6 +4,7 @@ import commonjs from "rollup-plugin-commonjs";
 export default {
   entry: "src/index.js",
   format: "umd",
+  sourceMap: "inline",
   moduleName: "ReactiveVis",
   plugins: [
     npm({ jsnext: true }),
