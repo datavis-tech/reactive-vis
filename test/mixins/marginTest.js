@@ -7,6 +7,7 @@ var output = common.output;
 var createSVG = common.createSVG;
 
 describe("Margin", function(){
+
   it("Should compute innerWidth and innerHeight", function(){
     var my = new ReactiveModel()
       .call(ReactiveVis.SVG)
@@ -69,5 +70,28 @@ describe("Margin", function(){
 
     ReactiveModel.digest();
     assert.equal(my.g().attr("transform"), "translate(12,10)");
+  });
+
+  it("Should select existing g if already on svg", function(){
+
+    var svg = createSVG();
+
+    var my = new ReactiveModel()
+      .call(ReactiveVis.SVG)
+      .call(ReactiveVis.Margin);
+
+    my.svg(svg);
+    ReactiveModel.digest();
+    assert.equal(svg.node().children.length, 1);
+
+    my.svg(svg);
+    ReactiveModel.digest();
+    assert.equal(svg.node().children.length, 1);
+
+    // Covers the .merge line in "g" definition.
+    my.marginTop(10).marginLeft(12);
+    ReactiveModel.digest();
+    assert.equal(my.g().attr("transform"), "translate(12,10)");
+
   });
 });
