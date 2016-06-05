@@ -14,14 +14,16 @@ describe("SVG", function(){
       .svg(svg)
 
     ReactiveModel.digest();
-    assert(svg.getAttribute("width", 960));
-    assert(svg.getAttribute("height", 500));
+    assert.equal(svg.getAttribute("width"), 960);
+    assert.equal(svg.getAttribute("height"), 500);
 
-    my.width(100).height(200);
+    my
+      .width(100)
+      .height(200);
 
     ReactiveModel.digest();
-    assert(svg.getAttribute("width", 100));
-    assert(svg.getAttribute("height", 200));
+    assert.equal(svg.getAttribute("width"), 100);
+    assert.equal(svg.getAttribute("height"), 200);
     
     output("svg");
     my.destroy();
