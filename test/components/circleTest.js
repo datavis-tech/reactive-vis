@@ -7,6 +7,8 @@ var createSVG = common.createSVG;
 
 describe("Circle", function(){
 
+  var exampleData = [{}];
+
   it("Should use SVG mixin.", function(){
     var svg = createSVG();
     var circle = ReactiveVis.Circle()
@@ -22,5 +24,11 @@ describe("Circle", function(){
     assert.equal(svg.getAttribute("height"), 200);
 
     circle.destroy();
+  });
+
+  it("Should use Data mixin.", function(){
+    var circle = ReactiveVis.Circle()
+      .data(exampleData);
+    assert.deepEqual(circle.data(), exampleData);
   });
 });
