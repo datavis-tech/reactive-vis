@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pretest": "rollup -c",
-    "test": "mocha --recursive"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
