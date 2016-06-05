@@ -21,7 +21,7 @@ export default function Margin(my){
         .data([1]);
 
       return g.enter().append("g")
-        .attr("class", "reactive-vis-margin-g")
+          .attr("class", "reactive-vis-margin-g")
         .merge(g);
 
     }, "svgSelection")
