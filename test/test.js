@@ -30,13 +30,17 @@ var common = {
 };
 
 describe("Mixins", function (){
-  fs.readdirSync("test/mixins").forEach(function (testFile){
-    require("./mixins/" + testFile)(common);
-  });
+  runTests("mixins");
 });
 
 describe("Components", function (){
-  fs.readdirSync("test/components").forEach(function (testFile){
-    require("./components/" + testFile)(common);
-  });
+  runTests("components");
 });
+
+function runTests(subdirectory){
+  fs.readdirSync("test/" + subdirectory).forEach(function (testFile){
+    if(testFile.indexOf(".swp") === -1){
+      require("./" + subdirectory + "/" + testFile)(common);
+    }
+  });
+}

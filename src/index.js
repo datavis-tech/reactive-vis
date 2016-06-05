@@ -1,9 +1,11 @@
 import ReactiveModel from "reactive-model";
-import Circle from "./components/circle";
 
-import SVG from "./mixins/svg";
+import SVG    from "./mixins/svg";
 import Margin from "./mixins/margin";
-import Data from "./mixins/data";
+import Data   from "./mixins/data";
+import Column from "./mixins/column";
+
+import Circle from "./components/circle";
 
 // This needs to be used to construct ReactiveModel instances,
 // because it is the version that's bundled within ReactiveVis.
@@ -16,9 +18,10 @@ export var Model = ReactiveModel;
 export var digest = ReactiveModel.digest;
 
 export {
-  Circle,
-
   SVG,
   Margin,
-  Data
+  Data,
+  Column,
+
+  Circle
 };
