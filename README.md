@@ -25,6 +25,7 @@ Note that names for nodes in the data flow graph diagrams follow the convention 
 
  * [SVG](#svg)
  * [Margin](#margin)
+ * [Data](#data)
 
 ### SVG
 
@@ -69,7 +70,22 @@ Reactive functions:
 
  * **g-transform** Computes and updates the `transform` attribute of *model*.**g** based on *model*.**marginTop** and *model*.**marginLeft**.
 
+### Data
+
+<a name="data" href="#data">#</a> ReactiveVis.<b>Data</b>(<i>model</i>)
+
+Properties added:
+
+ * *model*.**data** This property accepts the input data for the component. Typically this is expected to be an array of objects (e.g. the output from parsing a CSV file using [d3-dsv](https://github.com/d3/d3-dsv)).
+
 ## Related Work
+
+This project is similar to:
+
+ * [Vega](https://github.com/vega/vega)
+ * [C3](http://c3js.org/)
+ * [Dimple](http://dimplejs.org/)
+ * [NVD3](http://nvd3.org/)
 
 The build tooling for this project draws from:
 
