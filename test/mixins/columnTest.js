@@ -5,6 +5,7 @@ module.exports = function (common){
   var output = common.output;
 
   describe("Column", function(){
+
     it("Should create a column property with name prefix.", function(){
       var my = ReactiveVis.Model()
         .call(ReactiveVis.Data)
@@ -14,6 +15,18 @@ module.exports = function (common){
       assert.equal(my.xColumn(), "foo");
       
       output("column");
+      my.destroy();
+    });
+
+    it("Should create an accessor property with name prefix.", function(){
+      var my = ReactiveVis.Model()
+        .call(ReactiveVis.Data)
+        .call(ReactiveVis.Column, "x");
+
+      my.xColumn("foo");
+      ReactiveVis.digest();
+      assert.equal(my.xAccessor()({ foo: "bar" }), "bar");
+      
       my.destroy();
     });
   });
