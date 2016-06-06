@@ -49,18 +49,31 @@ module.exports = function (common){
       assert.equal(g.children[0], scatterG);
     });
 
-    //it("Should append a <g> elements for each data entry.", function (){
-    //  var scatter = ReactiveVis.Scatter()
-    //    .svg(createSVG())
-    //    .data(exampleData);
+    it("Should append g elements for each data entry.", function (){
+      var scatter = ReactiveVis.Scatter()
+        .svg(createSVG())
+        .data(exampleData);
 
-    //  ReactiveVis.digest();
+      ReactiveVis.digest();
 
-    //  var g = scatter.scatterG().node();
+      var g = scatter.scatterG().node();
 
-    //  assert.equal(g.children.length, 4);
-    //  assert.equal(g.children[0].tagName, "g");
-    //});
+      assert.equal(g.children.length, 4);
+      assert.equal(g.children[0].tagName, "g");
+    });
+
+    it("Should exit g elements.", function (){
+      var scatter = ReactiveVis.Scatter()
+        .svg(createSVG())
+        .data(exampleData);
+      ReactiveVis.digest();
+
+      scatter.data(exampleData.slice(0, 3));
+      ReactiveVis.digest();
+      var g = scatter.scatterG().node();
+      assert.equal(g.children.length, 3);
+      assert.equal(g.children[0].tagName, "g");
+    });
 
   });
 };
