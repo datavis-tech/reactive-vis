@@ -6,6 +6,7 @@ import Data   from "./mixins/data";
 import Column from "./mixins/column";
 
 import Circle from "./components/circle";
+import Scatter from "./components/scatter";
 
 // This needs to be used to construct ReactiveModel instances,
 // because it is the version that's bundled within ReactiveVis.
@@ -23,5 +24,6 @@ export {
   Data,
   Column,
 
-  Circle
+  Circle,
+  Scatter
 };
