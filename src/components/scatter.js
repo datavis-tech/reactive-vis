@@ -25,6 +25,14 @@ export default function Circle(){
     }, "innerWidth")
     .call(Scale, "x")
 
+    ("yDomain", function (data, accessor){
+      return extent(data, accessor);
+    }, "data, yAccessor")
+    ("yRange", function (innerHeight){
+      return [innerHeight, 0];
+    }, "innerHeight")
+    .call(Scale, "y")
+
     // This is the single SVG group for the scatter layer.
     ("scatterG", function (g){
 
@@ -38,7 +46,7 @@ export default function Circle(){
     }, "g")
 
     // This is the selection of many g elements, corresponding to the data.
-    ("scatter", function (scatterG, data, xScaled){
+    ("scatter", function (scatterG, data, xScaled, yScaled){
 
       var scatter = scatterG.selectAll(".reactive-vis-scatter")
         .data(data);
@@ -48,11 +56,9 @@ export default function Circle(){
       return scatter.enter().append("g")
           .attr("class", "reactive-vis-scatter")
         .merge(scatter)
+          .attr("transform", function (d){
+            return "translate(" + xScaled(d) + "," + yScaled(d) + ")";
+          });
 
-        // TODO use Y scale
-        .attr("transform", function (d){
-          return "translate(" + xScaled(d) + ",50)";
-        });
-
-    }, "scatterG, data, xScaled");
+    }, "scatterG, data, xScaled, yScaled");
 }
