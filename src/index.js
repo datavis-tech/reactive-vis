@@ -4,8 +4,9 @@ import SVG    from "./mixins/svg";
 import Margin from "./mixins/margin";
 import Data   from "./mixins/data";
 import Column from "./mixins/column";
+import Scale  from "./mixins/scale";
 
-import Circle from "./components/circle";
+import Circle  from "./components/circle";
 import Scatter from "./components/scatter";
 
 // This needs to be used to construct ReactiveModel instances,
@@ -23,6 +24,7 @@ export {
   Margin,
   Data,
   Column,
+  Scale,
 
   Circle,
   Scatter

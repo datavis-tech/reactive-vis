@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/curran/reactive-vis",
   "dependencies": {
+    "d3-scale": "^0.7.2",
     "d3-selection": "^0.7.3",
     "reactive-model": "0.11.0"
   },
