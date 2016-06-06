@@ -2,7 +2,9 @@ import { scaleLinear } from "d3-scale";
 
 var scaleConstructors = {
   linear: scaleLinear
+  // TODO support all scales https://github.com/datavis-tech/reactive-vis/issues/26
 };
+
 
 export default function Scale (my, name, options){
 

@@ -6,7 +6,7 @@ module.exports = function (common){
 
   describe("Scale", function(){
 
-    it("Should create a scale property with name prefix.", function(){
+    it("Should create a property with name prefix and use linear scale by default.", function(){
       var my = ReactiveVis.Model()
         .call(ReactiveVis.Data)
         .call(ReactiveVis.Column, "x")
@@ -16,28 +16,31 @@ module.exports = function (common){
         .call(ReactiveVis.Scale, "x")
 
       ReactiveVis.digest();
-
+     
       assert.equal(typeof my.xScale(), "function");
       assert.equal(my.xScale()(7), 40);
       
       my.destroy();
     });
 
-    //it("Should create an accessor property with name prefix.", function(){
-    //  var my = ReactiveVis.Model()
-    //    .call(ReactiveVis.Data)
-    //    .call(ReactiveVis.Column, "x");
+    it("Should create a (name + \"Scaled\") property.", function(){
+      var my = ReactiveVis.Model()
+        .call(ReactiveVis.Data)
+        .call(ReactiveVis.Column, "x")
 
-    //  my.xColumn("foo");
-    //  ReactiveVis.digest();
-    //  assert.equal(my.xAccessor()({ foo: "bar" }), "bar");
-    //  
-    //  my.destroy();
-    //});
-    //
-    //    .call(ReactiveVis.Scale, "x", {
-    //      type: "Linear",
-    //      nice: true
-    //    });
+        ("xDomain", [5, 10])
+        ("xRange", [0, 100])
+        .call(ReactiveVis.Scale, "x");
+
+      my.xColumn("foo");
+
+      ReactiveVis.digest();
+     
+      assert.equal(typeof my.xScaled(), "function");
+      assert.equal(my.xScaled()({ foo: 7 }), 40);
+      
+      my.destroy();
+    });
+
   });
 };
