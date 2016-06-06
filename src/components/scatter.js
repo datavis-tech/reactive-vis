@@ -13,6 +13,7 @@ export default function Circle(){
     .call(Column, "y")
     .call(Column, "size")
 
+    // This is the single SVG group for the scatter layer.
     ("scatterG", function (g){
 
       var scatterG = g.selectAll(".reactive-vis-scatter-g")
@@ -24,6 +25,7 @@ export default function Circle(){
 
     }, "g")
 
+    // This is the selection of many g elements, corresponding to the data.
     ("scatter", function (scatterG, data){
 
       var scatter = scatterG.selectAll(".reactive-vis-scatter")
@@ -33,7 +35,10 @@ export default function Circle(){
 
       return scatter.enter().append("g")
           .attr("class", "reactive-vis-scatter")
-        .merge(scatter);
+        .merge(scatter)
+
+        // TODO use X and Y scales
+        .attr("transform", "translate(50,50)");
 
     }, "scatterG, data")
 }

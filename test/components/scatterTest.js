@@ -27,6 +27,8 @@ module.exports = function (common){
       assert.equal(g.children.length, 1);
       assert.equal(g.children[0].tagName, "g");
       assert.equal(g.children[0], scatterG);
+
+      scatter.destroy();
     });
 
     it("Should update scatterG.", function (){
@@ -47,6 +49,8 @@ module.exports = function (common){
       assert.equal(g.children.length, 1);
       assert.equal(g.children[0].tagName, "g");
       assert.equal(g.children[0], scatterG);
+
+      scatter.destroy();
     });
 
     it("Should append g elements for each data entry.", function (){
@@ -60,6 +64,7 @@ module.exports = function (common){
 
       assert.equal(g.children.length, 4);
       assert.equal(g.children[0].tagName, "g");
+      scatter.destroy();
     });
 
     it("Should exit g elements.", function (){
@@ -73,6 +78,22 @@ module.exports = function (common){
       var g = scatter.scatterG().node();
       assert.equal(g.children.length, 3);
       assert.equal(g.children[0].tagName, "g");
+      scatter.destroy();
+    });
+
+    it("Should set g transforms for each data entry.", function (){
+      var scatter = ReactiveVis.Scatter()
+        .svg(createSVG())
+        .data(exampleData);
+
+      ReactiveVis.digest();
+
+      var g = scatter.scatterG().node();
+
+      // TODO use X and Y scales
+      assert.equal(g.children[0].getAttribute("transform"), "translate(50,50)");
+
+      scatter.destroy();
     });
 
   });
