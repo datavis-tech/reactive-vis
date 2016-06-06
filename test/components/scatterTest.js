@@ -58,6 +58,8 @@ module.exports = function (common){
         .svg(createSVG())
         .data(exampleData);
 
+      scatter.xColumn("sepal_length");
+
       ReactiveVis.digest();
 
       var g = scatter.scatterG().node();
@@ -71,6 +73,9 @@ module.exports = function (common){
       var scatter = ReactiveVis.Scatter()
         .svg(createSVG())
         .data(exampleData);
+
+      scatter.xColumn("sepal_length");
+
       ReactiveVis.digest();
 
       scatter.data(exampleData.slice(0, 3));
@@ -86,12 +91,14 @@ module.exports = function (common){
         .svg(createSVG())
         .data(exampleData);
 
+      scatter.xColumn("sepal_length");
+
       ReactiveVis.digest();
 
       var g = scatter.scatterG().node();
 
-      // TODO use X and Y scales
-      assert.equal(g.children[0].getAttribute("transform"), "translate(50,50)");
+      // TODO use Y scale
+      assert.equal(g.children[0].getAttribute("transform"), "translate(0,50)");
 
       scatter.destroy();
     });
