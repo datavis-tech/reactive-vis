@@ -37,6 +37,10 @@ describe("Components", function (){
   runTests("components");
 });
 
+describe("Composition", function (){
+  runTests("composition");
+});
+
 function runTests(subdirectory){
   fs.readdirSync("test/" + subdirectory).forEach(function (testFile){
     if(testFile.indexOf(".swp") === -1){
