@@ -5,7 +5,7 @@ import Margin from "../mixins/margin";
 import Column from "../mixins/column";
 import Scale from "../mixins/scale";
 
-import { extent } from "d3-array";
+import { extent, max } from "d3-array";
 
 // TODO use local from d3-selection when it is released.
 //import { local } from "d3-selection";
@@ -53,7 +53,7 @@ export default function Circle(){
     .call(Column, "y")
     .call(Column, "size")
 
-    // The X scale.
+    // The x scale.
     ("xDomain", function (data, accessor){
       return extent(data, accessor);
     }, "data, xAccessor")
@@ -62,7 +62,7 @@ export default function Circle(){
     }, "innerWidth")
     .call(Scale, "x")
 
-    // The Y scale.
+    // The y scale.
     ("yDomain", function (data, accessor){
       return extent(data, accessor);
     }, "data, yAccessor")
@@ -70,6 +70,16 @@ export default function Circle(){
       return [innerHeight, 0];
     }, "innerHeight")
     .call(Scale, "y")
+
+    // The size scale.
+    ("sizeMax", 20)
+    ("sizeDomain", function (data, accessor){
+      return [0, max(data, accessor)];
+    }, "data, sizeAccessor")
+    ("sizeRange", function (sizeMax){
+      return [0, sizeMax];
+    }, "sizeMax")
+    .call(Scale, "size", { type: "sqrt" })
 
     // This is the single SVG group for the scatter layer.
     ("scatterLayer", function (g){
@@ -84,7 +94,7 @@ export default function Circle(){
     }, "g")
 
     // This is the selection of many g elements, corresponding to the data.
-    ("marks", function (scatterLayer, data, xScaled, yScaled){
+    ("marks", function (scatterLayer, data, xScaled, yScaled, sizeScaled){
 
       var scatter = scatterLayer.selectAll(".reactive-vis-scatter-mark")
         .data(data);
@@ -100,12 +110,11 @@ export default function Circle(){
             return "translate(" + xScaled(d) + "," + yScaled(d) + ")";
           })
           .each(function(d) {
-            // TODO use sizeScaled(d)
-            sizeLocal.set(this, xScaled(d));
+            sizeLocal.set(this, sizeScaled(d));
           });
 
       marks.sizeLocal = sizeLocal;
 
       return marks;
-    }, "scatterLayer, data, xScaled, yScaled");
+    }, "scatterLayer, data, xScaled, yScaled, sizeScaled");
 }

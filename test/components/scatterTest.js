@@ -60,7 +60,10 @@ module.exports = function (common){
 
       scatter
         .xColumn("sepal_length")
-        .yColumn("sepal_width");
+        .yColumn("sepal_width")
+
+        // TODO remove this when it becomes optional.
+        .sizeColumn("petal_length");
 
       ReactiveVis.digest();
 
@@ -78,7 +81,8 @@ module.exports = function (common){
 
       scatter
         .xColumn("sepal_length")
-        .yColumn("sepal_width");
+        .yColumn("sepal_width")
+        .sizeColumn("petal_length");
 
       ReactiveVis.digest();
 
@@ -97,7 +101,8 @@ module.exports = function (common){
 
       scatter
         .xColumn("sepal_length")
-        .yColumn("sepal_width");
+        .yColumn("sepal_width")
+        .sizeColumn("petal_length");
 
       ReactiveVis.digest();
 
@@ -116,16 +121,15 @@ module.exports = function (common){
 
       scatter
         .xColumn("sepal_length")
-        .yColumn("sepal_width");
+        .yColumn("sepal_width")
+        .sizeColumn("petal_length");
 
       ReactiveVis.digest();
 
       var marks = scatter.marks();
       marks.each(function (d, i){
         var size = marks.sizeLocal.get(this);
-
-        // TODO use sizeScaled(d)
-        assert.equal(size, scatter.xScaled()(d));
+        assert.equal(size, scatter.sizeScaled()(d));
       });
 
       //assert.equal(g.children[1].getAttribute("transform"), "translate(66.15384615384647,400)");
