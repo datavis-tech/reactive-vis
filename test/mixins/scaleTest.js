@@ -42,5 +42,25 @@ module.exports = function (common){
       my.destroy();
     });
 
+    it("Should support sqrt scale.", function(){
+      var my = ReactiveVis.Model()
+        .call(ReactiveVis.Data)
+        .call(ReactiveVis.Column, "x")
+
+        ("xDomain", [0, 16])
+        ("xRange", [0, 256])
+        .call(ReactiveVis.Scale, "x", { type: "sqrt" })
+
+      my.xColumn("foo");
+
+      ReactiveVis.digest();
+     
+      assert.equal(typeof my.xScale(), "function");
+      assert.equal(my.xScale()(4), 128);
+      assert.equal(my.xScaled()({ foo: 4 }), 128);
+      
+      my.destroy();
+    });
+
   });
 };

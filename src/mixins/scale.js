@@ -1,7 +1,8 @@
-import { scaleLinear } from "d3-scale";
+import { scaleLinear, scaleSqrt } from "d3-scale";
 
 var scaleConstructors = {
-  linear: scaleLinear
+  linear: scaleLinear,
+  sqrt: scaleSqrt
   // TODO support all scales https://github.com/datavis-tech/reactive-vis/issues/26
 };
 
