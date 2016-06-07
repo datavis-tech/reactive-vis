@@ -108,6 +108,30 @@ module.exports = function (common){
 
       scatter.destroy();
     });
+    
+    it("Should expose size using local.", function (){
+      var scatter = ReactiveVis.Scatter()
+        .svg(createSVG())
+        .data(exampleData);
+
+      scatter
+        .xColumn("sepal_length")
+        .yColumn("sepal_width");
+
+      ReactiveVis.digest();
+
+      var marks = scatter.marks();
+      marks.each(function (d, i){
+        var size = marks.sizeLocal.get(this);
+
+        // TODO use sizeScaled(d)
+        assert.equal(size, scatter.xScaled()(d));
+      });
+
+      //assert.equal(g.children[1].getAttribute("transform"), "translate(66.15384615384647,400)");
+
+      scatter.destroy();
+    });
 
   });
 };
