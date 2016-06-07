@@ -14,7 +14,7 @@ module.exports = function (common){
       { "sepal_length": 6.4, "sepal_width": 3.1, "petal_length": 5.5, "petal_width": 1.8, "species": "virginica" }
     ];
 
-    it("Should append scatterG.", function (){
+    it("Should append scatterLayer.", function (){
       var scatter = ReactiveVis.Scatter()
         .svg(createSVG())
         .data(exampleData);
@@ -22,16 +22,16 @@ module.exports = function (common){
       ReactiveVis.digest();
 
       var g = scatter.g().node();
-      var scatterG = scatter.scatterG().node();
+      var scatterLayer = scatter.scatterLayer().node();
 
       assert.equal(g.children.length, 1);
       assert.equal(g.children[0].tagName, "g");
-      assert.equal(g.children[0], scatterG);
+      assert.equal(g.children[0], scatterLayer);
 
       scatter.destroy();
     });
 
-    it("Should update scatterG.", function (){
+    it("Should update scatterLayer.", function (){
       var svg = createSVG();
       var scatter = ReactiveVis.Scatter()
         .data(exampleData);
@@ -39,16 +39,16 @@ module.exports = function (common){
       scatter.svg(svg);
       ReactiveVis.digest();
       var g = scatter.g().node();
-      var scatterG = scatter.scatterG().node();
+      var scatterLayer = scatter.scatterLayer().node();
       assert.equal(g.children.length, 1);
       assert.equal(g.children[0].tagName, "g");
-      assert.equal(g.children[0], scatterG);
+      assert.equal(g.children[0], scatterLayer);
 
       scatter.svg(svg);
       ReactiveVis.digest();
       assert.equal(g.children.length, 1);
       assert.equal(g.children[0].tagName, "g");
-      assert.equal(g.children[0], scatterG);
+      assert.equal(g.children[0], scatterLayer);
 
       scatter.destroy();
     });
@@ -64,7 +64,7 @@ module.exports = function (common){
 
       ReactiveVis.digest();
 
-      var g = scatter.scatterG().node();
+      var g = scatter.scatterLayer().node();
 
       assert.equal(g.children.length, 4);
       assert.equal(g.children[0].tagName, "g");
@@ -84,7 +84,7 @@ module.exports = function (common){
 
       scatter.data(exampleData.slice(0, 3));
       ReactiveVis.digest();
-      var g = scatter.scatterG().node();
+      var g = scatter.scatterLayer().node();
       assert.equal(g.children.length, 3);
       assert.equal(g.children[0].tagName, "g");
       scatter.destroy();
@@ -101,7 +101,7 @@ module.exports = function (common){
 
       ReactiveVis.digest();
 
-      var g = scatter.scatterG().node();
+      var g = scatter.scatterLayer().node();
 
       assert.equal(g.children[0].getAttribute("transform"), "translate(0,0)");
       assert.equal(g.children[1].getAttribute("transform"), "translate(66.15384615384647,400)");

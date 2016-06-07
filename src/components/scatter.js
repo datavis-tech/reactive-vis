@@ -34,31 +34,31 @@ export default function Circle(){
     .call(Scale, "y")
 
     // This is the single SVG group for the scatter layer.
-    ("scatterG", function (g){
+    ("scatterLayer", function (g){
 
-      var scatterG = g.selectAll(".reactive-vis-scatter-g")
+      var scatterLayer = g.selectAll(".reactive-vis-scatter-layer")
         .data([1]);
 
-      return scatterG.enter().append("g")
-          .attr("class", "reactive-vis-scatter-g")
-        .merge(scatterG);
+      return scatterLayer.enter().append("g")
+          .attr("class", "reactive-vis-scatter-layer")
+        .merge(scatterLayer);
 
     }, "g")
 
     // This is the selection of many g elements, corresponding to the data.
-    ("scatter", function (scatterG, data, xScaled, yScaled){
+    ("marks", function (scatterLayer, data, xScaled, yScaled){
 
-      var scatter = scatterG.selectAll(".reactive-vis-scatter")
+      var scatter = scatterLayer.selectAll(".reactive-vis-scatter-mark")
         .data(data);
 
       scatter.exit().remove();
 
       return scatter.enter().append("g")
-          .attr("class", "reactive-vis-scatter")
+          .attr("class", "reactive-vis-scatter-mark")
         .merge(scatter)
           .attr("transform", function (d){
             return "translate(" + xScaled(d) + "," + yScaled(d) + ")";
           });
 
-    }, "scatterG, data, xScaled, yScaled");
+    }, "scatterLayer, data, xScaled, yScaled");
 }
