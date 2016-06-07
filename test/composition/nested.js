@@ -16,12 +16,11 @@ module.exports = function (common){
 
     it("Should nest Circle in Scatter.", function (){
 
-      console.log("This test is a work in progress");
-
+      var svg = createSVG();
       var circle = ReactiveVis.Circle();
 
       var scatter = ReactiveVis.Scatter()
-        .svg(createSVG())
+        .svg(svg)
         .data(exampleData);
 
       scatter
@@ -29,25 +28,43 @@ module.exports = function (common){
         .yColumn("sepal_width")
         .sizeColumn("petal_length");
 
-      //ReactiveVis.nest(scatter, circle);
       scatter(function (marks){
         marks.each(function (d){
           var size = marks.sizeLocal.get(this);
-          console.log(size);
           circle
             .data([d])
             .width(size)
             .height(size)
-            .svg(this);
-
-          // Depends on nested digests
-          // See https://github.com/datavis-tech/reactive-function/issues/18
-          //ReactiveVis.digest();
+            .svg(this)
+            .digest();
         });
-        console.log(marks);
       }, "marks");
 
       ReactiveVis.digest();
+
+      assert.equal(svg.children.length, 1);
+      assert.equal(svg.children[0].tagName, "g");
+      assert.equal(svg.children[0].getAttribute("class"), "reactive-vis-margin-g");
+
+      var g = svg.children[0];
+      assert.equal(g.children.length, 1);
+      assert.equal(g.children[0].tagName, "g");
+      assert.equal(g.children[0].getAttribute("class"), "reactive-vis-scatter-layer");
+
+      var scatterLayer = g.children[0];
+      assert.equal(scatterLayer.children.length, 4);
+      assert.equal(scatterLayer.children[0].tagName, "g");
+      assert.equal(scatterLayer.children[0].getAttribute("class"), "reactive-vis-scatter-mark");
+      assert.equal(scatterLayer.children[0].getAttribute("transform"), "translate(0,0)");
+
+      assert.equal(scatterLayer.children[1].tagName, "g");
+      assert.equal(scatterLayer.children[1].getAttribute("class"), "reactive-vis-scatter-mark");
+      assert.equal(scatterLayer.children[1].getAttribute("transform"), "translate(66.15384615384647,400)");
+
+      var mark0 = scatterLayer.children[0];
+      assert.equal(mark0.children.length, 1);
+      assert.equal(mark0.children[0].tagName, "circle");
+      assert.equal(mark0.children[0].getAttribute("class"), "reactive-vis-circle");
 
     });
   });
