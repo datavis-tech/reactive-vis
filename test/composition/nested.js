@@ -17,6 +17,7 @@ module.exports = function (common){
     it("Should nest Circle in Scatter.", function (){
 
       var svg = createSVG();
+
       var circle = ReactiveVis.Circle();
 
       var scatter = ReactiveVis.Scatter()
@@ -65,6 +66,10 @@ module.exports = function (common){
       assert.equal(mark0.children.length, 1);
       assert.equal(mark0.children[0].tagName, "circle");
       assert.equal(mark0.children[0].getAttribute("class"), "reactive-vis-circle");
+
+      // This can be used to output the SVG.
+      //console.log(svg.outerHTML);
+
 
     });
   });

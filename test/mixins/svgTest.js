@@ -8,6 +8,7 @@ module.exports = function (common){
   describe("SVG", function(){
     it("Should set width and height", function(){
       var svg = createSVG();
+
       var my = ReactiveVis.Model()
         .call(ReactiveVis.SVG)
         .svg(svg)
