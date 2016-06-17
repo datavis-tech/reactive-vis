@@ -8,41 +8,7 @@ import Scale from "../mixins/scale";
 import { extent, max } from "d3-array";
 import { scaleLinear, scaleSqrt } from "d3-scale";
 
-// TODO use local from d3-selection when it is released.
-//import { local } from "d3-selection";
-
-// Temporary measure:
-var local = (function() {
-  var nextKey = 0;
-
-  function local() {
-    return new Local;
-  }
-
-  function Local() {
-    this._id = "@" + (++nextKey).toString(36);
-  }
-
-  Local.prototype = local.prototype = {
-    constructor: Local,
-    get: function(node) {
-      var id = this._id;
-      while (!(id in node)) if (!(node = node.parentNode)) return;
-      return node[id];
-    },
-    set: function(node, value) {
-      return node[this._id] = value;
-    },
-    remove: function(node) {
-      return this._id in node && delete node[this._id];
-    },
-    toString: function() {
-      return this._id;
-    }
-  };
-
-  return local;
-})();
+import { local } from "d3-selection";
 
 export default function Circle(){
   return ReactiveModel()
