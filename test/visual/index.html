@@ -25,8 +25,11 @@
     <div id="chart-container"></div>
 
     <script>
+      var container = d3.select("#chart-container");
+
       var circle = ReactiveVis.Circle();
-      var scatter = ReactiveVis.Scatter();
+      var scatter = ReactiveVis.Scatter()
+        .call(ReactiveVis.Resize, container.node());
 
       scatter(function (marks){
         marks.each(function (d){
@@ -39,6 +42,7 @@
             .digest();
         });
       }, "marks");
+
     </script>
 
   </body>
