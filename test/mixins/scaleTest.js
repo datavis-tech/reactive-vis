@@ -1,19 +1,20 @@
 var ReactiveVis = require("../../build/reactive-vis.js");
 var assert = require("assert");
+var d3 = require("d3-scale");
 
 module.exports = function (common){
   var output = common.output;
 
   describe("Scale", function(){
 
-    it("Should create a property with name prefix and use linear scale by default.", function(){
+    it("Should create a property with name prefix.", function(){
       var my = ReactiveVis.Model()
         .call(ReactiveVis.Data)
         .call(ReactiveVis.Column, "x")
 
         ("xDomain", [5, 10])
         ("xRange", [0, 100])
-        .call(ReactiveVis.Scale, "x")
+        .call(ReactiveVis.Scale, "x", d3.scaleLinear)
 
       ReactiveVis.digest();
      
@@ -30,7 +31,7 @@ module.exports = function (common){
 
         ("xDomain", [5, 10])
         ("xRange", [0, 100])
-        .call(ReactiveVis.Scale, "x");
+        .call(ReactiveVis.Scale, "x", d3.scaleLinear)
 
       my.xColumn("foo");
 
@@ -49,7 +50,7 @@ module.exports = function (common){
 
         ("xDomain", [0, 16])
         ("xRange", [0, 256])
-        .call(ReactiveVis.Scale, "x", { type: "sqrt" })
+        .call(ReactiveVis.Scale, "x", d3.scaleSqrt);
 
       my.xColumn("foo");
 

@@ -6,6 +6,7 @@ import Column from "../mixins/column";
 import Scale from "../mixins/scale";
 
 import { extent, max } from "d3-array";
+import { scaleLinear, scaleSqrt } from "d3-scale";
 
 // TODO use local from d3-selection when it is released.
 //import { local } from "d3-selection";
@@ -60,7 +61,7 @@ export default function Circle(){
     ("xRange", function (innerWidth){
       return [0, innerWidth];
     }, "innerWidth")
-    .call(Scale, "x")
+    .call(Scale, "x", scaleLinear)
 
     // The y scale.
     ("yDomain", function (data, accessor){
@@ -69,7 +70,7 @@ export default function Circle(){
     ("yRange", function (innerHeight){
       return [innerHeight, 0];
     }, "innerHeight")
-    .call(Scale, "y")
+    .call(Scale, "y", scaleLinear)
 
     // The size scale.
     ("sizeMax", 20)
@@ -79,7 +80,7 @@ export default function Circle(){
     ("sizeRange", function (sizeMax){
       return [0, sizeMax];
     }, "sizeMax")
-    .call(Scale, "size", { type: "sqrt" })
+    .call(Scale, "size", scaleSqrt)
 
     // This is the single SVG group for the scatter layer.
     ("scatterLayer", function (g){
