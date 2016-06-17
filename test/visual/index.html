@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Reactive-Vis Visual Test</title>
+
+    <script src="//d3js.org/d3.v4.0.0-alpha.49.min.js"></script>
+    <script src="/build/reactive-vis.js"></script>
+
+    <style>
+
+      /* Make the chart container fill the page using CSS. */
+      #chart-container {
+        position: fixed;
+        left: 0px;
+        right: 0px;
+        top: 0px;
+        bottom: 0px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="chart-container"></div>
+
+    <script>
+      var circle = ReactiveVis.Circle();
+      var scatter = ReactiveVis.Scatter();
+
+      scatter(function (marks){
+        marks.each(function (d){
+          var size = marks.sizeLocal.get(this);
+          circle
+            .data([d])
+            .width(size)
+            .height(size)
+            .svg(this)
+            .digest();
+        });
+      }, "marks");
+    </script>
+
+  </body>
+</html>
