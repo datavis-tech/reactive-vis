@@ -1,4 +1,5 @@
-import {select} from "../d3";
+import {select} from "d3-selection";
+import "d3-transition";
 
 // Resizes the SVG container.
 export default function SVG (my){

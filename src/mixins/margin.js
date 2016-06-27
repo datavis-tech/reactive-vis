@@ -1,4 +1,5 @@
-import { select } from "d3-selection";
+import {select} from "d3-selection";
+import "d3-transition";
 
 // Encapsulates the margin convention.
 export default function Margin(my){

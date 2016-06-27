@@ -37,7 +37,7 @@ module.exports = function (common){
         .svg(svg)
 
       ReactiveVis.digest();
-      assert.equal(typeof my.svgSelection, "function");
+      assert.equal(typeof my.svgSelection.transition, "function");
 
       my.destroy();
     });
