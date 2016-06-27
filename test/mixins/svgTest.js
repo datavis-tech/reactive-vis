@@ -28,5 +28,18 @@ module.exports = function (common){
       output("svg");
       my.destroy();
     });
+
+    it("Should expose svgSelection (with .transition).", function(){
+      var svg = createSVG();
+
+      var my = ReactiveVis.Model()
+        .call(ReactiveVis.SVG)
+        .svg(svg)
+
+      ReactiveVis.digest();
+      assert.equal(typeof my.svgSelection, "function");
+
+      my.destroy();
+    });
   });
 };
