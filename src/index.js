@@ -1,7 +1,5 @@
 import ReactiveModel from "reactive-model";
 
-import "d3-transition";
-
 // Mixins
 import SVG    from "./mixins/svg";
 import Margin from "./mixins/margin";
@@ -33,5 +31,5 @@ export {
   Resize,
 
   Circle,
-  Scatter
+  Scatter,
 };
