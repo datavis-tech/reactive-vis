@@ -1,6 +1,6 @@
 {
   "name": "reactive-vis",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Reusable reactive data flows for data visualization.",
   "main": "index.js",
   "scripts": {
