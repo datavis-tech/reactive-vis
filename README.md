@@ -1,6 +1,6 @@
 # reactive-vis
 
-A library for reactive data visualizations based on composable and extensible components.
+A library for reactive data visualizations.
 
 [![NPM](https://nodei.co/npm/reactive-vis.png)](https://npmjs.org/package/reactive-vis)
 [![NPM](https://nodei.co/npm-dl/reactive-vis.png?months=3)](https://npmjs.org/package/reactive-vis)
