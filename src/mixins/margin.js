@@ -1,5 +1,3 @@
-import { select } from "d3-selection";
-
 // Encapsulates the margin convention.
 export default function Margin(my){
   my("marginTop", 50)
