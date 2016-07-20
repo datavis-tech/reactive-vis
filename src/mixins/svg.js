@@ -1,28 +1,30 @@
-import {
-  event,
-  selection,
-  select,
-  selectAll
-} from "d3-selection";
+import { select } from "d3";
 
-import "d3-transition";
+export function svg (my){
 
-// Resizes the SVG container.
-export default function SVG (my){
-  my("svg")
+  my("container")
     ("width", 960)
     ("height", 500)
 
-    ("svgSelection", function (svg){
-      console.log(selection.prototype);
-      return select(svg);
-    }, "svg")
+    ("svg", function (container){
 
-    ("svg-width", function (svgSelection, width){
-      svgSelection.attr("width", width);
-    }, "svgSelection, width")
+      var svg = select(container)
+        .selectAll(".reactive-vis-svg")
+          .data([1]);
 
-    ("svg-height", function (svgSelection, height){
-      svgSelection.attr("height", height);
-    }, "svgSelection, height");
+      return svg
+        .enter()
+          .append("svg")
+          .attr("class", "reactive-vis-svg")
+        .merge(svg);
+
+    }, "container")
+
+    ("svg-width", function (svg, width){
+      svg.attr("width", width);
+    }, "svg, width")
+
+    ("svg-height", function (svg, height){
+      svg.attr("height", height);
+    }, "svg, height");
 }

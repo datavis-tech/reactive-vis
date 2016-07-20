@@ -1,3 +1,3 @@
-export default function Data (my){
+export function data (my){
   my("data");
 }
